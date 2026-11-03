@@ -1,0 +1,36 @@
+{
+  "name": "quizmaster",
+  "version": "1.2.0",
+  "description": "QuizMaster — локальное приложение для проведения офлайн-квизов",
+  "author": "QuizMaster Team",
+  "license": "MIT",
+  "private": true,
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build-app.mjs",
+    "start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder --win nsis",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.test.json && node .test-build/tests/unit/run.js",
+    "e2e": "node tests/e2e/run.mjs"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.24.2",
+    "playwright-core": "^1.49.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "@vitejs/plugin-react": "^4.3.4"
+  }
+}

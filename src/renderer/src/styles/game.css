@@ -1,0 +1,3087 @@
+/* ==========================================================================
+   QuizMaster — игровой экран (проектор / второй монитор)
+   «Телевизионная студия»: глубокий фон, акцентные градиенты, крупная
+   типографика.
+
+   Оформление пака приходит атрибутом data-theme на .game-root. Все цвета,
+   которые тема может менять, собраны в локальные переменные --g-*: базовые
+   значения дают прежнюю тему «Студия», блоки .game-root[data-theme='…']
+   ниже переопределяют их. Общие токены base.css не трогаем.
+   ========================================================================== */
+
+.game-root {
+  /* --- Тема «Студия» (по умолчанию) --- */
+  --g-bg: var(--bg);
+  --g-bg-rgb: 10, 13, 24;
+  --g-accent: #7c6cf5;
+  --g-accent-2: #22d3ee;
+  --g-accent-rgb: 124, 108, 245;
+  --g-accent-2-rgb: 34, 211, 238;
+  --g-soft: rgba(124, 108, 245, 0.16);
+  --g-line: rgba(124, 108, 245, 0.45);
+  --g-soft-text: #ddd7ff;
+  --g-points-text: #e2dcff;
+  --g-hint: #a5f3fc;
+  --g-title: linear-gradient(120deg, #ffffff, #c8c0ff 45%, #7ae7ff);
+  --g-title-2: linear-gradient(135deg, #ffffff 8%, #b9aeff 46%, #6ee7ff 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #b9aeff);
+  --g-mark: linear-gradient(140deg, #8a7cff, #5542c9 58%, #382a97);
+  --g-play: linear-gradient(135deg, #7c6cf5, #5b4ae8);
+  --g-play-hover: linear-gradient(135deg, #8a7cff, #6553f2);
+  --g-glow:
+    radial-gradient(44% 40% at 18% 10%, rgba(124, 108, 245, 0.24), transparent 70%),
+    radial-gradient(38% 36% at 86% 6%, rgba(34, 211, 238, 0.14), transparent 72%),
+    radial-gradient(58% 50% at 50% 116%, rgba(91, 74, 232, 0.18), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(124, 108, 245, 0.1), rgba(13, 19, 34, 0.58));
+  --g-panel-line: rgba(124, 108, 245, 0.45);
+  --g-answer: #9df5cd;
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--text);
+  user-select: none;
+  background-color: var(--g-bg);
+  background-image:
+    radial-gradient(1200px 760px at 50% -16%, rgba(var(--g-accent-rgb), 0.24), transparent 62%),
+    radial-gradient(1000px 620px at 100% 108%, rgba(var(--g-accent-2-rgb), 0.12), transparent 64%),
+    radial-gradient(1000px 640px at 0% 104%, rgba(var(--g-accent-rgb), 0.13), transparent 62%);
+}
+
+/* Медленно дышащее свечение студии */
+.game-root__glow {
+  position: absolute;
+  inset: -18%;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--g-glow);
+  animation: game-glow-drift 26s ease-in-out infinite alternate;
+}
+
+/* Декоративный слой темы: снег, огни, сетка. В «Студии» и большинстве тем пуст. */
+.game-root__decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* Световые «лучи» со сцены */
+.game-root::before {
+  content: '';
+  position: absolute;
+  inset: -22% -12%;
+  z-index: 0;
+  pointer-events: none;
+  background: conic-gradient(
+    from 200deg at 50% 0%,
+    transparent 0deg,
+    rgba(var(--g-accent-rgb), 0.16) 24deg,
+    transparent 58deg,
+    transparent 300deg,
+    rgba(var(--g-accent-2-rgb), 0.1) 332deg,
+    transparent 366deg
+  );
+  filter: blur(56px);
+  animation: game-beam 22s ease-in-out infinite alternate;
+}
+
+/* Виньетка поверх контента — студийная глубина кадра */
+.game-root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  box-shadow: inset 0 0 240px 70px rgba(0, 0, 0, 0.5);
+}
+
+.game-root[data-phase='finished'] .game-root__glow {
+  background:
+    radial-gradient(44% 40% at 18% 10%, rgba(251, 191, 36, 0.17), transparent 70%),
+    radial-gradient(38% 36% at 86% 6%, rgba(124, 108, 245, 0.2), transparent 72%),
+    radial-gradient(58% 50% at 50% 116%, rgba(251, 191, 36, 0.1), transparent 70%);
+}
+
+/* ==========================================================================
+   Темы оформления пака
+   Меняем только переменные --g-* и лёгкие декоративные слои. Каталог тем и
+   подписи живут в src/shared/themes.ts; здесь — только оформление. Почти все
+   темы тёмные, «Ретро (Windows XP)» — светлая: для неё дополнительно
+   переопределены базовые токены цвета/поверхностей ниже в своём блоке.
+   ========================================================================== */
+
+/* ---------- Голубые тона ---------- */
+.game-root[data-theme='blue'] {
+  --g-bg: #04121f;
+  --g-bg-rgb: 4, 18, 31;
+  --g-accent: #38bdf8;
+  --g-accent-2: #a5f3fc;
+  --g-accent-rgb: 56, 189, 248;
+  --g-accent-2-rgb: 165, 243, 252;
+  --g-soft: rgba(56, 189, 248, 0.16);
+  --g-line: rgba(56, 189, 248, 0.45);
+  --g-soft-text: #d9f6ff;
+  --g-points-text: #e0f7ff;
+  --g-hint: #a5f3fc;
+  --g-title: linear-gradient(120deg, #ffffff, #bae6fd 45%, #38bdf8);
+  --g-title-2: linear-gradient(135deg, #ffffff 8%, #7dd3fc 46%, #22d3ee 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #7dd3fc);
+  --g-mark: linear-gradient(140deg, #38bdf8, #0e7490 58%, #083344);
+  --g-play: linear-gradient(135deg, #0ea5e9, #0369a1);
+  --g-play-hover: linear-gradient(135deg, #38bdf8, #0284c7);
+  --g-glow:
+    radial-gradient(46% 42% at 16% 8%, rgba(56, 189, 248, 0.24), transparent 70%),
+    radial-gradient(38% 36% at 86% 6%, rgba(165, 243, 252, 0.12), transparent 72%),
+    radial-gradient(58% 52% at 50% 116%, rgba(14, 116, 144, 0.3), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(56, 189, 248, 0.11), rgba(4, 18, 31, 0.6));
+  --g-panel-line: rgba(56, 189, 248, 0.36);
+  --g-answer: #7dd3fc;
+}
+
+.game-root[data-theme='blue'] .game-root__decor {
+  background:
+    radial-gradient(520px 300px at 50% 108%, rgba(56, 189, 248, 0.14), transparent 70%),
+    radial-gradient(320px 220px at 12% 16%, rgba(165, 243, 252, 0.08), transparent 72%);
+}
+
+/* ---------- Розовые тона ---------- */
+.game-root[data-theme='pink'] {
+  --g-bg: #1a0a16;
+  --g-bg-rgb: 26, 10, 22;
+  --g-accent: #f472b6;
+  --g-accent-2: #fbcfe8;
+  --g-accent-rgb: 244, 114, 182;
+  --g-accent-2-rgb: 251, 207, 232;
+  --g-soft: rgba(244, 114, 182, 0.16);
+  --g-line: rgba(244, 114, 182, 0.45);
+  --g-soft-text: #ffe4f1;
+  --g-points-text: #ffe9f4;
+  --g-hint: #fbcfe8;
+  --g-title: linear-gradient(120deg, #ffffff, #fbcfe8 45%, #f472b6);
+  --g-title-2: linear-gradient(135deg, #ffffff 8%, #f9a8d4 46%, #fbcfe8 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #f9a8d4);
+  --g-mark: linear-gradient(140deg, #f472b6, #be185d 58%, #831843);
+  --g-play: linear-gradient(135deg, #ec4899, #be185d);
+  --g-play-hover: linear-gradient(135deg, #f472b6, #db2777);
+  --g-glow:
+    radial-gradient(46% 42% at 16% 8%, rgba(244, 114, 182, 0.24), transparent 70%),
+    radial-gradient(38% 36% at 86% 6%, rgba(251, 207, 232, 0.1), transparent 72%),
+    radial-gradient(58% 52% at 50% 116%, rgba(190, 24, 93, 0.26), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(244, 114, 182, 0.11), rgba(26, 10, 22, 0.6));
+  --g-panel-line: rgba(244, 114, 182, 0.36);
+  --g-answer: #f9a8d4;
+}
+
+.game-root[data-theme='pink'] .game-root__decor {
+  background:
+    radial-gradient(340px 260px at 82% 18%, rgba(251, 207, 232, 0.12), transparent 72%),
+    radial-gradient(420px 320px at 12% 92%, rgba(244, 114, 182, 0.12), transparent 72%);
+}
+
+/* ---------- Пастель (светлая) ---------- */
+.game-root[data-theme='pastel'] {
+  color-scheme: light;
+
+  --g-bg: #f7f1fb;
+  --g-bg-rgb: 247, 241, 251;
+  --g-accent: #a78bfa;
+  --g-accent-2: #f9a8d4;
+  --g-accent-rgb: 167, 139, 250;
+  --g-accent-2-rgb: 249, 168, 212;
+  --g-soft: rgba(255, 255, 255, 0.66);
+  --g-line: rgba(139, 92, 246, 0.3);
+  --g-soft-text: #4c3b64;
+  --g-points-text: #4c3b64;
+  --g-hint: #9d5c8f;
+  --g-title: linear-gradient(120deg, #6d28d9, #c084fc 46%, #f472b6);
+  --g-title-2: linear-gradient(135deg, #4c1d95 8%, #a78bfa 46%, #f472b6 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #c4b5fd);
+  --g-mark: linear-gradient(140deg, #c4b5fd, #a78bfa 55%, #f472b6);
+  --g-play: linear-gradient(135deg, #a78bfa, #7c3aed);
+  --g-play-hover: linear-gradient(135deg, #c4b5fd, #8b5cf6);
+  --g-glow:
+    radial-gradient(46% 42% at 14% 6%, rgba(249, 168, 212, 0.35), transparent 70%),
+    radial-gradient(40% 38% at 86% 4%, rgba(196, 181, 253, 0.4), transparent 72%),
+    radial-gradient(58% 52% at 50% 118%, rgba(167, 243, 208, 0.35), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(240, 233, 250, 0.7));
+  --g-panel-line: rgba(139, 92, 246, 0.28);
+  --g-answer: #6d28d9;
+
+  /* Светлое оформление: тёмный сливовый текст на светлых панелях. */
+  --text: #3b2f4a;
+  --text-muted: #6b5a7e;
+  --text-dim: #8b7a9e;
+  --surface: rgba(255, 255, 255, 0.55);
+  --surface-strong: rgba(255, 255, 255, 0.8);
+  --surface-solid: #fbf7fe;
+  --border: rgba(90, 70, 120, 0.18);
+  --border-strong: rgba(90, 70, 120, 0.32);
+  --shadow: 0 18px 40px -24px rgba(91, 62, 132, 0.35);
+  --shadow-lg: 0 34px 74px -36px rgba(91, 62, 132, 0.42);
+
+  background-color: var(--g-bg);
+  background-image:
+    radial-gradient(65% 55% at 12% -6%, rgba(255, 214, 230, 0.9), transparent 62%),
+    radial-gradient(55% 48% at 88% 2%, rgba(214, 234, 255, 0.9), transparent 64%),
+    radial-gradient(60% 52% at 50% 112%, rgba(209, 250, 229, 0.85), transparent 66%),
+    linear-gradient(160deg, #fff7fb 0%, #f4eefc 46%, #eaf8f2 100%);
+}
+
+/* Мягкие пастельные круги-боке */
+.game-root[data-theme='pastel'] .game-root__decor {
+  opacity: 0.9;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255, 214, 230, 0.55) 0 70px, transparent 72px),
+    radial-gradient(circle at 86% 26%, rgba(196, 181, 253, 0.45) 0 92px, transparent 94px),
+    radial-gradient(circle at 74% 82%, rgba(167, 243, 208, 0.45) 0 82px, transparent 84px),
+    radial-gradient(circle at 24% 78%, rgba(255, 237, 213, 0.55) 0 62px, transparent 64px);
+  background-repeat: no-repeat;
+}
+
+/* ---------- Зима ---------- */
+.game-root[data-theme='winter'] {
+  --g-bg: #071424;
+  --g-bg-rgb: 7, 20, 36;
+  --g-accent: #7dd3fc;
+  --g-accent-2: #e2e8f0;
+  --g-accent-rgb: 125, 211, 252;
+  --g-accent-2-rgb: 226, 232, 240;
+  --g-soft: rgba(125, 211, 252, 0.16);
+  --g-line: rgba(125, 211, 252, 0.46);
+  --g-soft-text: #e0f2fe;
+  --g-points-text: #eaf9ff;
+  --g-hint: #bae6fd;
+  --g-title: linear-gradient(120deg, #ffffff, #dbeafe 45%, #7dd3fc);
+  --g-title-2: linear-gradient(135deg, #ffffff 8%, #bfdbfe 46%, #38bdf8 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #bfdbfe);
+  --g-mark: linear-gradient(140deg, #93c5fd, #2563eb 58%, #1e3a8a);
+  --g-play: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  --g-play-hover: linear-gradient(135deg, #60a5fa, #2563eb);
+  --g-glow:
+    radial-gradient(46% 42% at 14% 6%, rgba(125, 211, 252, 0.24), transparent 70%),
+    radial-gradient(40% 38% at 86% 4%, rgba(226, 232, 240, 0.16), transparent 72%),
+    radial-gradient(58% 52% at 50% 118%, rgba(37, 99, 235, 0.24), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(125, 211, 252, 0.1), rgba(7, 20, 36, 0.64));
+  --g-panel-line: rgba(125, 211, 252, 0.34);
+  --g-answer: #bae6fd;
+}
+
+/* Морозный снегопад: крупные редкие снежинки */
+.game-root[data-theme='winter'] .game-root__decor {
+  opacity: 0.6;
+  background-image:
+    radial-gradient(2.4px 2.4px at 12% 16%, rgba(255, 255, 255, 0.9), transparent 60%),
+    radial-gradient(1.8px 1.8px at 26% 48%, rgba(224, 242, 254, 0.85), transparent 60%),
+    radial-gradient(2.8px 2.8px at 41% 8%, rgba(255, 255, 255, 0.7), transparent 60%),
+    radial-gradient(2px 2px at 58% 62%, rgba(191, 219, 254, 0.85), transparent 60%),
+    radial-gradient(3px 3px at 73% 28%, rgba(255, 255, 255, 0.85), transparent 60%),
+    radial-gradient(1.8px 1.8px at 88% 70%, rgba(224, 242, 254, 0.7), transparent 60%),
+    radial-gradient(2.4px 2.4px at 20% 88%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(2px 2px at 64% 92%, rgba(191, 219, 254, 0.75), transparent 60%);
+  background-size: 480px 480px;
+  background-repeat: repeat;
+  animation: game-snow 46s linear infinite;
+}
+
+/* ---------- Весна ---------- */
+.game-root[data-theme='spring'] {
+  --g-bg: #0c1a12;
+  --g-bg-rgb: 12, 26, 18;
+  --g-accent: #86efac;
+  --g-accent-2: #f9a8d4;
+  --g-accent-rgb: 134, 239, 172;
+  --g-accent-2-rgb: 249, 168, 212;
+  --g-soft: rgba(134, 239, 172, 0.16);
+  --g-line: rgba(134, 239, 172, 0.44);
+  --g-soft-text: #dcfce7;
+  --g-points-text: #ecfdf5;
+  --g-hint: #fbcfe8;
+  --g-title: linear-gradient(120deg, #ffffff, #bbf7d0 45%, #f9a8d4);
+  --g-title-2: linear-gradient(135deg, #f0fdf4 8%, #86efac 46%, #f472b6 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #86efac);
+  --g-mark: linear-gradient(140deg, #34d399, #15803d 58%, #14532d);
+  --g-play: linear-gradient(135deg, #22c55e, #15803d);
+  --g-play-hover: linear-gradient(135deg, #4ade80, #16a34a);
+  --g-glow:
+    radial-gradient(46% 42% at 14% 6%, rgba(134, 239, 172, 0.22), transparent 70%),
+    radial-gradient(40% 38% at 86% 4%, rgba(249, 168, 212, 0.16), transparent 72%),
+    radial-gradient(58% 52% at 50% 118%, rgba(21, 128, 61, 0.24), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(134, 239, 172, 0.1), rgba(12, 26, 18, 0.64));
+  --g-panel-line: rgba(134, 239, 172, 0.34);
+  --g-answer: #bbf7d0;
+}
+
+/* Лепестки цветущих яблонь */
+.game-root[data-theme='spring'] .game-root__decor {
+  opacity: 0.7;
+  background-image:
+    radial-gradient(3px 2px at 16% 18%, rgba(249, 168, 212, 0.85), transparent 60%),
+    radial-gradient(2.4px 1.8px at 34% 54%, rgba(251, 207, 232, 0.75), transparent 60%),
+    radial-gradient(2.6px 2px at 52% 12%, rgba(249, 168, 212, 0.7), transparent 60%),
+    radial-gradient(3.2px 2.2px at 71% 64%, rgba(251, 207, 232, 0.8), transparent 60%),
+    radial-gradient(2.4px 1.8px at 86% 30%, rgba(249, 168, 212, 0.75), transparent 60%),
+    radial-gradient(2.2px 1.8px at 8% 82%, rgba(187, 247, 208, 0.55), transparent 60%),
+    radial-gradient(2.8px 2px at 62% 90%, rgba(251, 207, 232, 0.6), transparent 60%);
+  background-size:
+    340px 340px,
+    380px 380px,
+    300px 300px,
+    420px 420px,
+    360px 360px,
+    440px 440px,
+    400px 400px;
+  background-repeat: repeat;
+  animation: game-petals 34s linear infinite;
+}
+
+/* ---------- Лето ---------- */
+.game-root[data-theme='summer'] {
+  --g-bg: #1b1206;
+  --g-bg-rgb: 27, 18, 6;
+  --g-accent: #fbbf24;
+  --g-accent-2: #2dd4bf;
+  --g-accent-rgb: 251, 191, 36;
+  --g-accent-2-rgb: 45, 212, 191;
+  --g-soft: rgba(251, 191, 36, 0.17);
+  --g-line: rgba(251, 191, 36, 0.46);
+  --g-soft-text: #ffedc2;
+  --g-points-text: #fff3cd;
+  --g-hint: #5eead4;
+  --g-title: linear-gradient(120deg, #fff8e1, #fbbf24 48%, #2dd4bf);
+  --g-title-2: linear-gradient(135deg, #fff7d6 8%, #fbbf24 46%, #14b8a6 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #fbbf24);
+  --g-mark: linear-gradient(140deg, #fbbf24, #ea580c 58%, #7c2d12);
+  --g-play: linear-gradient(135deg, #f59e0b, #c2410c);
+  --g-play-hover: linear-gradient(135deg, #fbbf24, #ea580c);
+  --g-glow:
+    radial-gradient(46% 42% at 12% -2%, rgba(251, 191, 36, 0.28), transparent 68%),
+    radial-gradient(40% 38% at 88% 8%, rgba(251, 113, 133, 0.14), transparent 72%),
+    radial-gradient(60% 52% at 50% 116%, rgba(45, 212, 191, 0.18), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(251, 191, 36, 0.11), rgba(27, 18, 6, 0.62));
+  --g-panel-line: rgba(251, 191, 36, 0.38);
+  --g-answer: #fde68a;
+}
+
+.game-root[data-theme='summer'] .game-root__decor {
+  background:
+    radial-gradient(240px 240px at 84% 12%, rgba(251, 191, 36, 0.2), transparent 70%),
+    radial-gradient(520px 320px at 18% 100%, rgba(45, 212, 191, 0.12), transparent 72%);
+}
+
+/* ---------- Осень ---------- */
+.game-root[data-theme='autumn'] {
+  --g-bg: #1a0e05;
+  --g-bg-rgb: 26, 14, 5;
+  --g-accent: #fb923c;
+  --g-accent-2: #fbbf24;
+  --g-accent-rgb: 251, 146, 60;
+  --g-accent-2-rgb: 251, 191, 36;
+  --g-soft: rgba(251, 146, 60, 0.17);
+  --g-line: rgba(251, 146, 60, 0.46);
+  --g-soft-text: #ffedd5;
+  --g-points-text: #fff3e0;
+  --g-hint: #fde68a;
+  --g-title: linear-gradient(120deg, #fff7ed, #fdba74 45%, #fbbf24);
+  --g-title-2: linear-gradient(135deg, #ffedd5 8%, #fb923c 46%, #f59e0b 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #fdba74);
+  --g-mark: linear-gradient(140deg, #fb923c, #c2410c 58%, #7c2d12);
+  --g-play: linear-gradient(135deg, #ea580c, #9a3412);
+  --g-play-hover: linear-gradient(135deg, #f97316, #c2410c);
+  --g-glow:
+    radial-gradient(46% 42% at 12% 4%, rgba(251, 146, 60, 0.26), transparent 70%),
+    radial-gradient(40% 38% at 88% 8%, rgba(251, 191, 36, 0.18), transparent 72%),
+    radial-gradient(58% 52% at 50% 118%, rgba(124, 45, 18, 0.3), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(251, 146, 60, 0.11), rgba(26, 14, 5, 0.64));
+  --g-panel-line: rgba(251, 146, 60, 0.38);
+  --g-answer: #fde68a;
+}
+
+/* Кленовые листья, медленно падающие вниз */
+.game-root[data-theme='autumn'] .game-root__decor {
+  opacity: 0.42;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='%23fb923c' fill-opacity='0.55'%3E%3Cpath d='M52 22c15 6 22 21 17 36-15-3-26-16-17-36z'/%3E%3Cpath d='M196 86c16 4 25 18 22 33-15-1-28-13-22-33z'/%3E%3C/g%3E%3Cg fill='%23fbbf24' fill-opacity='0.5'%3E%3Cpath d='M118 168c14 7 19 22 14 36-14-3-23-17-14-36z'/%3E%3Cpath d='M28 192c12 6 17 19 13 31-12-3-20-15-13-31z'/%3E%3C/g%3E%3Cg fill='%23f97316' fill-opacity='0.4'%3E%3Cpath d='M214 206c11 5 16 17 12 29-11-3-19-14-12-29z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 320px 320px;
+  background-repeat: repeat;
+  animation: game-leaves 30s linear infinite;
+}
+
+/* ---------- Киберпанк ---------- */
+.game-root[data-theme='cyberpunk'] {
+  --g-bg: #05010f;
+  --g-bg-rgb: 5, 1, 15;
+  --g-accent: #d946ef;
+  --g-accent-2: #a3e635;
+  --g-accent-rgb: 217, 70, 239;
+  --g-accent-2-rgb: 163, 230, 53;
+  --g-soft: rgba(217, 70, 239, 0.18);
+  --g-line: rgba(217, 70, 239, 0.5);
+  --g-soft-text: #f5d0fe;
+  --g-points-text: #fae8ff;
+  --g-hint: #bef264;
+  --g-title: linear-gradient(120deg, #f5d0fe, #d946ef 45%, #a3e635);
+  --g-title-2: linear-gradient(135deg, #faf5ff 8%, #d946ef 46%, #a3e635 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #d946ef);
+  --g-mark: linear-gradient(140deg, #d946ef, #7e22ce 58%, #a3e635);
+  --g-play: linear-gradient(135deg, #d946ef, #7c3aed);
+  --g-play-hover: linear-gradient(135deg, #e879f9, #8b5cf6);
+  --g-glow:
+    radial-gradient(44% 40% at 16% 8%, rgba(217, 70, 239, 0.28), transparent 70%),
+    radial-gradient(38% 36% at 86% 4%, rgba(163, 230, 53, 0.16), transparent 72%),
+    radial-gradient(60% 50% at 50% 118%, rgba(124, 58, 237, 0.24), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(217, 70, 239, 0.12), rgba(5, 1, 15, 0.64));
+  --g-panel-line: rgba(217, 70, 239, 0.42);
+  --g-answer: #bef264;
+}
+
+/* Неоновая сетка у нижнего края кадра */
+.game-root[data-theme='cyberpunk'] .game-root__decor {
+  background-image:
+    repeating-linear-gradient(90deg, rgba(217, 70, 239, 0.16) 0 1px, transparent 1px 88px),
+    repeating-linear-gradient(0deg, rgba(163, 230, 53, 0.12) 0 1px, transparent 1px 88px);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 62%);
+  mask-image: linear-gradient(to top, #000 0%, transparent 62%);
+}
+
+/* ---------- Ретро (Windows XP) ---------- */
+/*
+   Единственная светлая тема: «Луна» Windows XP — синее небо, зелёные холмы,
+   серебристые поверхности и зелёная кнопка «Пуск». Локально переопределяем
+   базовые токены, поэтому текст остаётся тёмным, а панели — светлыми.
+*/
+.game-root[data-theme='retro'] {
+  color-scheme: light;
+
+  --g-bg: #4c8fdd;
+  --g-bg-rgb: 76, 143, 221;
+  --g-accent: #2f6fd0;
+  --g-accent-2: #3f9c35;
+  --g-accent-rgb: 47, 111, 208;
+  --g-accent-2-rgb: 63, 156, 53;
+  --g-soft: rgba(255, 255, 255, 0.62);
+  --g-line: rgba(31, 74, 145, 0.42);
+  --g-soft-text: #12335c;
+  --g-points-text: #12335c;
+  --g-hint: #1f5fbf;
+  --g-title: linear-gradient(120deg, #0b2b5c, #1e62c9 48%, #0f7a2f);
+  --g-title-2: linear-gradient(135deg, #0b2b5c 8%, #2f6fd0 46%, #3f9c35 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #7fa5d4);
+  --g-mark: linear-gradient(140deg, #7fa5d4, #2f6fd0 55%, #17458f);
+  --g-play: linear-gradient(135deg, #3f9c35, #2f7d28);
+  --g-play-hover: linear-gradient(135deg, #4fb843, #3a9130);
+  --g-glow:
+    radial-gradient(50% 42% at 78% 4%, rgba(255, 255, 255, 0.5), transparent 70%),
+    radial-gradient(40% 34% at 12% 2%, rgba(255, 255, 255, 0.3), transparent 72%),
+    radial-gradient(60% 50% at 50% 112%, rgba(63, 156, 53, 0.35), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(226, 236, 249, 0.66));
+  --g-panel-line: rgba(31, 74, 145, 0.35);
+  --g-answer: #0f6b33;
+
+  /* Светлый экран: базовые токены наследуются всем содержимым игрового экрана. */
+  --text: #0d2a4d;
+  --text-muted: #1b4472;
+  --text-dim: #2b5484;
+  --surface: rgba(255, 255, 255, 0.5);
+  --surface-strong: rgba(255, 255, 255, 0.78);
+  --surface-solid: #e7f0fb;
+  --border: rgba(31, 74, 145, 0.24);
+  --border-strong: rgba(31, 74, 145, 0.42);
+  --shadow: 0 14px 30px -20px rgba(12, 44, 92, 0.65);
+  --shadow-lg: 0 26px 56px -30px rgba(12, 44, 92, 0.75);
+  --radius-sm: 3px;
+  --radius: 5px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --font: Tahoma, 'Segoe UI', sans-serif;
+  --font-display: Tahoma, 'Segoe UI', sans-serif;
+
+  background-color: var(--g-bg);
+  background-image:
+    radial-gradient(130% 78% at 50% 118%, #7aba4a 0%, #5a9c3b 46%, #4e8a35 54%, rgba(78, 138, 53, 0) 55%),
+    radial-gradient(85% 52% at 4% 120%, #6cad42 0%, rgba(108, 173, 66, 0) 58%),
+    radial-gradient(120% 46% at 50% -12%, rgba(255, 255, 255, 0.45), transparent 62%),
+    linear-gradient(180deg, #1550a8 0%, #3b7bd8 30%, #7fb4ec 48%, #cfe8fb 66%, #eaf6fe 100%);
+}
+
+/* На светлом XP лучи и виньетка студии не нужны — только мягкая дымка. */
+.game-root[data-theme='retro']::before {
+  display: none;
+}
+
+.game-root[data-theme='retro']::after {
+  box-shadow: inset 0 0 220px 50px rgba(255, 255, 255, 0.36);
+}
+
+.game-root[data-theme='retro'] .game-root__glow {
+  opacity: 0.5;
+}
+
+/* Панель задач Windows XP внизу кадра + зелёная кнопка «Пуск» */
+.game-root[data-theme='retro'] .game-root__decor {
+  opacity: 1;
+  background:
+    linear-gradient(180deg, #5b9be8 0 2px, #2f6fd0 2px 22px, #1e5dc4 22px 100%) left bottom / 100% 34px no-repeat,
+    linear-gradient(180deg, #56c24a 0 2px, #3f9c35 2px 24px, #2f7d28 24px 100%) left bottom / 118px 34px no-repeat;
+}
+
+.game-root[data-theme='retro'] .game-root__decor::before {
+  content: 'Пуск';
+  position: absolute;
+  left: 12px;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px 0 27px;
+  color: #ffffff;
+  font-family: Tahoma, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  background: radial-gradient(circle at 13px 50%, #ffe066 0 3px, #f0b529 4px 7px, rgba(240, 181, 41, 0) 8px)
+    left center / 26px 22px no-repeat;
+}
+
+/* Пилюли, кнопки и чипы — «серебристые» поверхности XP */
+.game-root[data-theme='retro'] .game-chip {
+  border-radius: 4px;
+  border-color: #7fa5d4;
+  background: linear-gradient(180deg, #ffffff 0%, #e5eef9 52%, #cfdff1 100%);
+  color: #12335c;
+  box-shadow:
+    0 2px 5px -2px rgba(15, 50, 100, 0.6),
+    inset 0 1px 0 #ffffff;
+}
+
+.game-root[data-theme='retro'] .game-chip--muted {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(31, 74, 145, 0.2);
+  color: #4a6a99;
+}
+
+.game-root[data-theme='retro'] .game-points,
+.game-root[data-theme='retro'] .game-lobby__waiting,
+.game-root[data-theme='retro'] .game-round-intro__count,
+.game-root[data-theme='retro'] .game-summary__status,
+.game-root[data-theme='retro'] .game-review-badge {
+  border-radius: 4px;
+}
+
+.game-root[data-theme='retro'] .game-points__star {
+  color: #c98a00;
+}
+
+.game-root[data-theme='retro'] .game-question__text {
+  text-shadow:
+    0 2px 18px rgba(255, 255, 255, 0.75),
+    0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Таймер: дорожка подстраивается под светлый фон */
+.game-root[data-theme='retro'] .countdown__svg circle:first-of-type {
+  stroke: rgba(15, 50, 100, 0.18);
+}
+
+/* Плеер и медиа-панели — светлое стекло вместо тёмного */
+.game-root[data-theme='retro'] .game-audio {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(226, 236, 249, 0.6));
+  border-color: rgba(31, 74, 145, 0.28);
+}
+
+.game-root[data-theme='retro'] .game-audio__btn {
+  background: linear-gradient(180deg, #ffffff, #dbe7f6);
+  border-color: rgba(31, 74, 145, 0.35);
+  color: #12335c;
+}
+
+.game-root[data-theme='retro'] .game-audio__btn:hover {
+  background: linear-gradient(180deg, #ffffff, #cddcef);
+  border-color: rgba(31, 74, 145, 0.5);
+}
+
+.game-root[data-theme='retro'] .game-audio__btn--play {
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.game-root[data-theme='retro'] .game-audio__track {
+  background: rgba(15, 50, 100, 0.16);
+}
+
+.game-root[data-theme='retro'] .game-media__fallback {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(31, 74, 145, 0.4);
+}
+
+/* Подиум, итоговая таблица и награды: тёмные подписи вместо белых */
+.game-root[data-theme='retro'] .game-results__hero {
+  padding: clamp(14px, 2vw, 28px);
+  border-radius: 8px;
+  border: 1px solid rgba(31, 74, 145, 0.35);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(226, 236, 249, 0.7));
+  box-shadow:
+    0 18px 40px -26px rgba(12, 44, 92, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.game-root[data-theme='retro'] .game-results__winner {
+  background-image: linear-gradient(120deg, #0b2b5c, #1e62c9 42%, #0f7a2f 96%);
+}
+
+.game-root[data-theme='retro'] .game-podium__block {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.28));
+  border-color: rgba(31, 74, 145, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.game-root[data-theme='retro'] .game-podium__place {
+  color: #12335c;
+}
+
+.game-root[data-theme='retro'] .game-podium__item--p1 .game-podium__place {
+  color: #7a5300;
+}
+
+.game-root[data-theme='retro'] .game-podium__item--p2 .game-podium__place {
+  color: #40516b;
+}
+
+.game-root[data-theme='retro'] .game-podium__item--p3 .game-podium__place {
+  color: #7a4a22;
+}
+
+.game-root[data-theme='retro'] .game-results-table tbody td {
+  border-bottom-color: rgba(31, 74, 145, 0.14);
+}
+
+.game-root[data-theme='retro'] .game-results-table tbody tr.is-winner .game-results-table__place,
+.game-root[data-theme='retro'] .game-results-table tbody tr.is-winner .game-results-table__score {
+  color: #7a5300;
+}
+
+.game-root[data-theme='retro'] .game-results-table tbody tr.is-winner .game-results-table__name {
+  color: #0b2b5c;
+}
+
+.game-root[data-theme='retro'] .game-award {
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.game-root[data-theme='retro'] .game-award__teams {
+  color: #8a5a00;
+}
+
+/* Список правильных ответов: светлые строки и тёмный текст ответа */
+.game-root[data-theme='retro'] .game-answer-row {
+  background: rgba(255, 255, 255, 0.46);
+  border-color: rgba(31, 74, 145, 0.2);
+}
+
+.game-root[data-theme='retro'] .game-answer-row__answer {
+  text-shadow: 0 2px 14px rgba(255, 255, 255, 0.55);
+}
+
+.game-root[data-theme='retro'] .game-hint {
+  color: #12335c;
+}
+
+.game-root[data-theme='retro'] .game-hint__key {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(31, 74, 145, 0.35);
+  color: #12335c;
+}
+
+/* ---------- Windows 98 (светлая) ---------- */
+/*
+   Классический рабочий стол Windows 98: бирюзовый фон, серое окно приложения
+   с объёмной рамкой и синим заголовком, серые кнопки с фаской. Окно и панель
+   задач рисуются ниже, в общем блоке светлых тем и финальных штрихах win98.
+*/
+.game-root[data-theme='win98'] {
+  color-scheme: light;
+
+  --g-bg: #008080;
+  --g-bg-rgb: 0, 128, 128;
+  --g-accent: #000080;
+  --g-accent-2: #008080;
+  --g-accent-rgb: 0, 0, 128;
+  --g-accent-2-rgb: 0, 128, 128;
+  --g-soft: rgba(255, 255, 255, 0.55);
+  --g-line: rgba(0, 0, 128, 0.35);
+  --g-soft-text: #000080;
+  --g-points-text: #000080;
+  --g-hint: #000080;
+  --g-title: linear-gradient(120deg, #000080, #0000c0 45%, #008080);
+  --g-title-2: linear-gradient(135deg, #000080 8%, #1084d0 46%, #008080 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #c0c0c0);
+  --g-mark: linear-gradient(140deg, #c0c0c0, #808080 58%, #000080);
+  --g-play: linear-gradient(180deg, #dfdfdf, #b8b8b8);
+  --g-play-hover: linear-gradient(180deg, #ffffff, #cfcfcf);
+  --g-glow:
+    radial-gradient(50% 45% at 78% 4%, rgba(255, 255, 255, 0.18), transparent 70%),
+    radial-gradient(55% 50% at 18% 108%, rgba(0, 0, 0, 0.18), transparent 72%);
+  --g-panel: #c0c0c0;
+  --g-panel-line: #808080;
+  --g-answer: #000080;
+
+  --text: #000000;
+  --text-muted: #222222;
+  --text-dim: #444444;
+  --surface: #c0c0c0;
+  --surface-strong: #dfdfdf;
+  --surface-solid: #c0c0c0;
+  --border: #808080;
+  --border-strong: #404040;
+  --shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+  --shadow-lg: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  --radius-sm: 0;
+  --radius: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --font: 'MS Sans Serif', Tahoma, 'Segoe UI', sans-serif;
+  --font-display: 'MS Sans Serif', Tahoma, 'Segoe UI', sans-serif;
+  --font-mono: 'Courier New', Consolas, monospace;
+
+  background-color: var(--g-bg);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 4px),
+    radial-gradient(120% 80% at 50% -10%, #0a9a9a, transparent 70%);
+}
+
+/* ---------- Хэллоуин ---------- */
+.game-root[data-theme='halloween'] {
+  --g-bg: #080604;
+  --g-bg-rgb: 8, 6, 4;
+  --g-accent: #f97316;
+  --g-accent-2: #22c55e;
+  --g-accent-rgb: 249, 115, 22;
+  --g-accent-2-rgb: 34, 197, 94;
+  --g-soft: rgba(249, 115, 22, 0.17);
+  --g-line: rgba(249, 115, 22, 0.48);
+  --g-soft-text: #ffe8cc;
+  --g-points-text: #ffedd5;
+  --g-hint: #86efac;
+  --g-title: linear-gradient(120deg, #fef3c7, #f97316 46%, #22c55e);
+  --g-title-2: linear-gradient(135deg, #fff7ed 8%, #f97316 46%, #16a34a 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #fdba74);
+  --g-mark: linear-gradient(140deg, #f97316, #9a3412 55%, #14532d);
+  --g-play: linear-gradient(135deg, #ea580c, #9a3412);
+  --g-play-hover: linear-gradient(135deg, #f97316, #c2410c);
+  --g-glow:
+    radial-gradient(40% 36% at 84% 6%, rgba(34, 197, 94, 0.18), transparent 68%),
+    radial-gradient(44% 38% at 14% 8%, rgba(249, 115, 22, 0.24), transparent 70%),
+    radial-gradient(60% 50% at 50% 118%, rgba(124, 45, 18, 0.3), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(249, 115, 22, 0.1), rgba(8, 6, 4, 0.66));
+  --g-panel-line: rgba(249, 115, 22, 0.4);
+  --g-answer: #86efac;
+}
+
+/* Крупные размытые тыквы-эмодзи на фоне и чёткие летучие мыши в углах */
+.game-root[data-theme='halloween'] .game-root__decor {
+  opacity: 1;
+  background: none;
+}
+
+.game-root[data-theme='halloween'] .game-root__decor::before,
+.game-root[data-theme='halloween'] .game-root__decor::after {
+  content: '🎃';
+  position: absolute;
+  bottom: -5%;
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+  font-size: clamp(200px, 24vw, 380px);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.game-root[data-theme='halloween'] .game-root__decor::before {
+  left: -4%;
+  opacity: 0.5;
+  filter: blur(9px);
+  transform: rotate(-8deg);
+}
+
+.game-root[data-theme='halloween'] .game-root__decor::after {
+  right: -5%;
+  bottom: -7%;
+  opacity: 0.42;
+  filter: blur(11px);
+  transform: rotate(9deg);
+}
+
+/* Летучие мыши-эмодзи — чёткие, в нижних углах кадра */
+.game-root[data-theme='halloween'] .game-root__glow::before,
+.game-root[data-theme='halloween'] .game-root__glow::after {
+  content: '🦇';
+  position: absolute;
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+  font-size: clamp(58px, 6vw, 104px);
+  line-height: 1;
+  opacity: 0.95;
+  filter: invert(1) brightness(1.05) drop-shadow(0 0 18px rgba(249, 115, 22, 0.75));
+  pointer-events: none;
+}
+
+.game-root[data-theme='halloween'] .game-root__glow::before {
+  top: 62%;
+  left: 16%;
+  transform: rotate(-14deg);
+}
+
+.game-root[data-theme='halloween'] .game-root__glow::after {
+  top: 56%;
+  right: 16%;
+  transform: rotate(12deg);
+}
+/* ---------- Новый год ---------- */
+.game-root[data-theme='newyear'] {
+  --g-bg: #06170f;
+  --g-bg-rgb: 6, 23, 15;
+  --g-accent: #ef4444;
+  --g-accent-2: #4ade80;
+  --g-accent-rgb: 239, 68, 68;
+  --g-accent-2-rgb: 74, 222, 128;
+  --g-soft: rgba(239, 68, 68, 0.16);
+  --g-line: rgba(239, 68, 68, 0.46);
+  --g-soft-text: #ffe4e6;
+  --g-points-text: #fff1f2;
+  --g-hint: #86efac;
+  --g-title: linear-gradient(120deg, #ffffff, #fecaca 42%, #86efac);
+  --g-title-2: linear-gradient(135deg, #ffffff 8%, #fca5a5 44%, #4ade80 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #fca5a5);
+  --g-mark: linear-gradient(140deg, #ef4444, #b91c1c 52%, #15803d);
+  --g-play: linear-gradient(135deg, #dc2626, #991b1b);
+  --g-play-hover: linear-gradient(135deg, #ef4444, #b91c1c);
+  --g-glow:
+    radial-gradient(42% 38% at 16% 6%, rgba(239, 68, 68, 0.24), transparent 70%),
+    radial-gradient(40% 36% at 86% 4%, rgba(74, 222, 128, 0.22), transparent 72%),
+    radial-gradient(58% 50% at 50% 118%, rgba(22, 101, 52, 0.3), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(239, 68, 68, 0.1), rgba(6, 23, 15, 0.66));
+  --g-panel-line: rgba(239, 68, 68, 0.36);
+  --g-answer: #bbf7d0;
+}
+
+/* Большие размытые ёлки на фоне, три венка по краям и снег */
+.game-root[data-theme='newyear'] .game-root__decor {
+  opacity: 0.95;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1500' height='380' viewBox='0 0 1500 380'%3E%3Cdefs%3E%3Cfilter id='b' x='-25%25' y='-25%25' width='150%25' height='150%25'%3E%3CfeGaussianBlur stdDeviation='10'/%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23b)' fill='%230b3d24' fill-opacity='0.92'%3E%3Cg transform='translate(300 80) scale(2)'%3E%3Cpath d='M0 16L34 62H18L46 108H26L58 150H-58L-26 108H-46L-18 62H-34Z'/%3E%3C/g%3E%3Cg transform='translate(760 20) scale(2.4)'%3E%3Cpath d='M0 16L34 62H18L46 108H26L58 150H-58L-26 108H-46L-18 62H-34Z'/%3E%3C/g%3E%3Cg transform='translate(1220 65) scale(2.1)'%3E%3Cpath d='M0 16L34 62H18L46 108H26L58 150H-58L-26 108H-46L-18 62H-34Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Ccircle cx='90' cy='90' r='58' fill='none' stroke='%2316a34a' stroke-width='18' stroke-opacity='0.85'/%3E%3Ccircle cx='90' cy='90' r='58' fill='none' stroke='%23065f46' stroke-width='6' stroke-opacity='0.55' stroke-dasharray='8 12'/%3E%3Cg fill='%23dc2626'%3E%3Cpath d='M90 30c-11-9-25 0-20 13 4 10 16 11 20 2 4 9 16 8 20-2 5-13-9-22-20-13z'/%3E%3C/g%3E%3Cg fill='%23fbbf24' fill-opacity='0.85'%3E%3Ccircle cx='54' cy='66' r='4.5'/%3E%3Ccircle cx='126' cy='72' r='4'/%3E%3Ccircle cx='82' cy='134' r='3.5'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Ccircle cx='90' cy='90' r='58' fill='none' stroke='%2316a34a' stroke-width='18' stroke-opacity='0.8'/%3E%3Ccircle cx='90' cy='90' r='58' fill='none' stroke='%23065f46' stroke-width='6' stroke-opacity='0.5' stroke-dasharray='8 12'/%3E%3Cg fill='%23dc2626'%3E%3Cpath d='M90 30c-11-9-25 0-20 13 4 10 16 11 20 2 4 9 16 8 20-2 5-13-9-22-20-13z'/%3E%3C/g%3E%3Cg fill='%23fbbf24' fill-opacity='0.8'%3E%3Ccircle cx='54' cy='66' r='4.5'/%3E%3Ccircle cx='126' cy='72' r='4'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Ccircle cx='90' cy='90' r='58' fill='none' stroke='%2316a34a' stroke-width='18' stroke-opacity='0.82'/%3E%3Ccircle cx='90' cy='90' r='58' fill='none' stroke='%23065f46' stroke-width='6' stroke-opacity='0.52' stroke-dasharray='8 12'/%3E%3Cg fill='%23dc2626'%3E%3Cpath d='M90 30c-11-9-25 0-20 13 4 10 16 11 20 2 4 9 16 8 20-2 5-13-9-22-20-13z'/%3E%3C/g%3E%3Cg fill='%23fbbf24' fill-opacity='0.82'%3E%3Ccircle cx='54' cy='66' r='4.5'/%3E%3Ccircle cx='126' cy='72' r='4'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  background-position:
+    50% 100%,
+    4% 14%,
+    3% 82%,
+    96% 80%;
+  background-size:
+    1750px auto,
+    170px auto,
+    160px auto,
+    170px auto;
+}
+
+.game-root[data-theme='newyear'] .game-root__decor::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.9) 0 1.8px, rgba(255, 255, 255, 0) 2.8px),
+    radial-gradient(circle, rgba(248, 250, 252, 0.7) 0 3px, rgba(248, 250, 252, 0) 4.6px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.6) 0 1.2px, rgba(255, 255, 255, 0) 2.2px);
+  background-size:
+    180px 180px,
+    340px 340px,
+    120px 120px;
+  background-repeat: repeat;
+  animation: game-snow 24s linear infinite;
+  filter: blur(0.7px);
+  opacity: 0.95;
+}
+/* ---------- День святого Валентина ---------- */
+.game-root[data-theme='valentine'] {
+  --g-bg: #1a0711;
+  --g-bg-rgb: 26, 7, 17;
+  --g-accent: #fb7185;
+  --g-accent-2: #fda4af;
+  --g-accent-rgb: 251, 113, 133;
+  --g-accent-2-rgb: 253, 164, 175;
+  --g-soft: rgba(251, 113, 133, 0.17);
+  --g-line: rgba(251, 113, 133, 0.48);
+  --g-soft-text: #ffe4e6;
+  --g-points-text: #fff1f2;
+  --g-hint: #fecdd3;
+  --g-title: linear-gradient(120deg, #ffffff, #fda4af 45%, #fb7185);
+  --g-title-2: linear-gradient(135deg, #fff1f2 8%, #fb7185 46%, #e11d48 96%);
+  --g-bars: linear-gradient(180deg, #ffffff, #fda4af);
+  --g-mark: linear-gradient(140deg, #fb7185, #be123c 58%, #881337);
+  --g-play: linear-gradient(135deg, #e11d48, #9f1239);
+  --g-play-hover: linear-gradient(135deg, #f43f5e, #be123c);
+  --g-glow:
+    radial-gradient(46% 42% at 14% 6%, rgba(251, 113, 133, 0.26), transparent 70%),
+    radial-gradient(40% 38% at 86% 4%, rgba(253, 164, 175, 0.14), transparent 72%),
+    radial-gradient(58% 52% at 50% 118%, rgba(159, 18, 57, 0.28), transparent 70%);
+  --g-panel: linear-gradient(180deg, rgba(251, 113, 133, 0.11), rgba(26, 7, 17, 0.64));
+  --g-panel-line: rgba(251, 113, 133, 0.38);
+  --g-answer: #fecdd3;
+}
+
+/* Сердца, медленно поднимающиеся вверх */
+.game-root[data-theme='valentine'] .game-root__decor {
+  opacity: 0.38;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23fb7185' fill-opacity='0.4'%3E%3Cpath d='M60 70c-9-9-24-4-24 9 0 12 14 20 24 29 10-9 24-17 24-29 0-13-15-18-24-9z'/%3E%3C/g%3E%3Cg fill='%23fda4af' fill-opacity='0.3'%3E%3Cpath d='M172 152c-7-7-19-3-19 7 0 9 11 16 19 23 8-7 19-14 19-23 0-10-12-14-19-7z'/%3E%3C/g%3E%3Cg fill='%23f43f5e' fill-opacity='0.22'%3E%3Cpath d='M110 214c-5-5-14-2-14 5 0 7 8 12 14 17 6-5 14-10 14-17 0-7-9-10-14-5z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 320px 320px;
+  background-repeat: repeat;
+  animation: game-hearts 38s linear infinite;
+}
+
+/* ==========================================================================
+   Светлые темы (data-scheme='light')
+   Общие правила читаемости для «Пастели», «Ретро (XP)» и «Windows 98»:
+   тёмный текст, светлые панели и мягкая дымка вместо студийных лучей.
+   Цвета берутся из токенов темы, поэтому блок работает для всех светлых тем.
+   ========================================================================== */
+
+.game-root[data-scheme='light']::before {
+  display: none;
+}
+
+.game-root[data-scheme='light']::after {
+  box-shadow: inset 0 0 220px 50px rgba(255, 255, 255, 0.34);
+}
+
+.game-root[data-scheme='light'] .game-root__glow {
+  opacity: 0.5;
+}
+
+.game-root[data-scheme='light'] .game-chip {
+  border-radius: var(--radius-sm);
+  border-color: var(--g-line);
+  background: var(--g-panel);
+  color: var(--text);
+  box-shadow:
+    0 2px 5px -2px rgba(20, 30, 60, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.game-root[data-scheme='light'] .game-chip--muted {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.game-root[data-scheme='light'] .game-points,
+.game-root[data-scheme='light'] .game-lobby__waiting,
+.game-root[data-scheme='light'] .game-round-intro__count,
+.game-root[data-scheme='light'] .game-summary__status,
+.game-root[data-scheme='light'] .game-review-badge {
+  border-radius: var(--radius-sm);
+}
+
+.game-root[data-scheme='light'] .game-points__star {
+  color: #b45309;
+}
+
+.game-root[data-scheme='light'] .game-question__text {
+  text-shadow:
+    0 2px 18px rgba(255, 255, 255, 0.75),
+    0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.game-root[data-scheme='light'] .countdown__svg circle:first-of-type {
+  stroke: rgba(20, 40, 70, 0.18);
+}
+
+.game-root[data-scheme='light'] .game-audio {
+  background: var(--g-panel);
+  border-color: var(--g-panel-line);
+}
+
+.game-root[data-scheme='light'] .game-audio__btn {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.game-root[data-scheme='light'] .game-audio__btn:hover {
+  background: var(--surface-strong);
+  border-color: var(--text-dim);
+}
+
+.game-root[data-scheme='light'] .game-audio__btn--play {
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.game-root[data-scheme='light'] .game-audio__track {
+  background: rgba(20, 40, 70, 0.16);
+}
+
+.game-root[data-scheme='light'] .game-media__fallback {
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+.game-root[data-scheme='light'] .game-results__hero {
+  padding: clamp(14px, 2vw, 28px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--g-panel-line);
+  background: var(--g-panel);
+  box-shadow:
+    0 18px 40px -26px rgba(30, 40, 70, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.game-root[data-scheme='light'] .game-results__label {
+  color: var(--g-accent);
+}
+
+.game-root[data-scheme='light'] .game-results__winner {
+  background-image: var(--g-title-2);
+  filter: none;
+}
+
+.game-root[data-scheme='light'] .game-podium__block {
+  background: var(--surface-strong);
+  border-color: var(--border-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.game-root[data-scheme='light'] .game-podium__place,
+.game-root[data-scheme='light'] .game-podium__item--p1 .game-podium__place,
+.game-root[data-scheme='light'] .game-podium__item--p2 .game-podium__place,
+.game-root[data-scheme='light'] .game-podium__item--p3 .game-podium__place {
+  color: var(--text);
+}
+
+.game-root[data-scheme='light'] .game-results-table tbody td {
+  border-bottom-color: var(--border);
+}
+
+.game-root[data-scheme='light'] .game-results-table tbody tr.is-winner .game-results-table__place,
+.game-root[data-scheme='light'] .game-results-table tbody tr.is-winner .game-results-table__score,
+.game-root[data-scheme='light'] .game-results-table tbody tr.is-winner .game-results-table__name {
+  color: var(--text);
+}
+
+.game-root[data-scheme='light'] .game-award {
+  background: var(--surface);
+}
+
+.game-root[data-scheme='light'] .game-award__teams {
+  color: var(--g-accent);
+}
+
+.game-root[data-scheme='light'] .game-answer-row {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.game-root[data-scheme='light'] .game-answer-row__answer {
+  text-shadow: 0 2px 14px rgba(255, 255, 255, 0.5);
+}
+
+.game-root[data-scheme='light'] .game-hint {
+  color: var(--text);
+}
+
+.game-root[data-scheme='light'] .game-hint__key {
+  background: var(--surface-strong);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+/* ==========================================================================
+   Windows 98: окно приложения, панель задач и объёмные кнопки
+   ========================================================================== */
+
+/* Серое окно приложения на бирюзовом рабочем столе */
+.game-root[data-theme='win98'] .game-screen {
+  inset: clamp(16px, 2.8vh, 42px) clamp(16px, 2.8vw, 58px) clamp(30px, 4.4vh, 60px);
+  padding: 34px clamp(18px, 3vw, 52px) clamp(14px, 2.2vh, 30px);
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Синий заголовок окна */
+.game-root[data-theme='win98'] .game-screen::before {
+  content: 'QuizMaster — игровой экран';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  padding: 4px 8px;
+  overflow: hidden;
+  background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+  color: #ffffff;
+  font-family: 'MS Sans Serif', Tahoma, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Панель задач с кнопкой «Пуск» и часами */
+.game-root[data-theme='win98'] .game-root__glow {
+  display: none;
+}
+
+.game-root[data-theme='win98'] .game-question__text,
+.game-root[data-theme='win98'] .game-results__winner {
+  text-shadow: none;
+}
+
+.game-root[data-theme='win98'] .game-screen::after {
+  content: '_  □  ✕';
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  height: 16px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  color: #ffffff;
+  font-family: 'MS Sans Serif', Tahoma, 'Segoe UI', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+}
+
+.game-root[data-theme='win98'] .game-root__decor {
+  opacity: 1;
+  background: linear-gradient(180deg, #dfdfdf 0 2px, #c0c0c0 2px 100%) left bottom / 100% 30px no-repeat;
+}
+
+.game-root[data-theme='win98'] .game-root__decor::before {
+  content: 'Пуск';
+  position: absolute;
+  left: 4px;
+  bottom: 3px;
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px 0 30px;
+  color: #000000;
+  font-family: 'MS Sans Serif', Tahoma, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  background:
+    linear-gradient(180deg, #ff0000 0 50%, #0000ff 50%) 8px center / 8px 8px no-repeat,
+    linear-gradient(180deg, #00a000 0 50%, #ffd000 50%) 16px center / 8px 8px no-repeat,
+    #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+}
+
+.game-root[data-theme='win98'] .game-root__decor::after {
+  content: 'QuizMaster   12:00';
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  color: #000000;
+  font-family: 'MS Sans Serif', Tahoma, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+/* Кнопки, пилюли и панели — классическая фаска 98-го */
+.game-root[data-theme='win98'] .game-chip,
+.game-root[data-theme='win98'] .game-chip--muted,
+.game-root[data-theme='win98'] .game-points,
+.game-root[data-theme='win98'] .game-lobby__waiting,
+.game-root[data-theme='win98'] .game-round-intro__count,
+.game-root[data-theme='win98'] .game-summary__status,
+.game-root[data-theme='win98'] .game-review-badge,
+.game-root[data-theme='win98'] .game-audio,
+.game-root[data-theme='win98'] .game-results__hero,
+.game-root[data-theme='win98'] .game-results__board,
+.game-root[data-theme='win98'] .game-answers__list,
+.game-root[data-theme='win98'] .game-award {
+  border-radius: 0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  background: #c0c0c0;
+  box-shadow: inset 1px 1px 0 #ffffff;
+}
+
+.game-root[data-theme='win98'] .game-audio__btn--play {
+  color: #000000;
+}
+
+.game-root[data-theme='win98'] .game-audio__btn:hover {
+  background: #dfdfdf;
+}
+
+.game-root[data-theme='win98'] .game-audio__track {
+  border-radius: 0;
+  background: #808080;
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+.game-root[data-theme='win98'] .game-audio__fill {
+  border-radius: 0;
+}
+
+.game-root[data-theme='win98'] .game-audio__thumb {
+  width: 14px;
+  height: 20px;
+  aspect-ratio: auto;
+  border-radius: 0;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  box-shadow: none;
+}
+
+/* ---------- Каркас экрана ---------- */
+
+.game-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(22px, 3.4vh, 54px) clamp(28px, 4.4vw, 92px) clamp(20px, 3vh, 46px);
+  animation: game-screen-in 480ms var(--ease) both;
+}
+
+/* ---------- Чипы команд ---------- */
+
+.game-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 34vw;
+  padding: 0.42em 1.05em;
+  border-radius: 999px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  color: #e6eaff;
+  font-size: clamp(15px, 1.35vw, 24px);
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 10px 26px -20px rgba(0, 0, 0, 0.95);
+  animation: game-chip-in 480ms var(--ease) both;
+}
+
+.game-chip--muted {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.07);
+  color: var(--text-muted);
+}
+
+/* ---------- Заставка ожидания ---------- */
+
+.game-idle {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.8vh, 26px);
+  text-align: center;
+}
+
+.game-idle__mark {
+  width: clamp(84px, 11vh, 148px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 26%;
+  background: var(--g-mark);
+  box-shadow:
+    0 30px 80px -30px rgba(var(--g-accent-rgb), 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(40px, 6vh, 76px);
+  color: #fff;
+  animation: game-breathe 5.2s ease-in-out infinite;
+}
+
+.game-idle__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  background: var(--g-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.game-idle__subtitle {
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--text-muted);
+  font-size: clamp(14px, 1.5vw, 24px);
+  font-weight: 600;
+}
+
+.game-idle__waiting {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-dim);
+  font-size: clamp(13px, 1.15vw, 18px);
+  letter-spacing: 0.04em;
+}
+
+.game-idle__dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.game-idle__dots i {
+  width: clamp(5px, 0.5vw, 8px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--g-accent-2);
+  animation: game-blink 1.8s ease-in-out infinite;
+}
+
+.game-idle__dots i:nth-child(2) {
+  animation-delay: 0.24s;
+}
+
+.game-idle__dots i:nth-child(3) {
+  animation-delay: 0.48s;
+}
+
+/* ---------- Лобби ---------- */
+
+.game-screen--lobby {
+  padding-left: clamp(28px, 5vw, 110px);
+  padding-right: clamp(28px, 5vw, 110px);
+}
+
+.game-lobby {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.8vh, 28px);
+  text-align: center;
+}
+
+.game-lobby__halo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.game-lobby__halo span {
+  position: absolute;
+  width: min(54vh, 40vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--g-accent-rgb), 0.16);
+  animation: game-halo 6.6s var(--ease) infinite;
+}
+
+.game-lobby__halo span:nth-child(2) {
+  animation-delay: 2.2s;
+}
+
+.game-lobby__halo span:nth-child(3) {
+  animation-delay: 4.4s;
+}
+
+.game-lobby > :not(.game-lobby__halo) {
+  position: relative;
+  z-index: 1;
+}
+
+.game-lobby__brand {
+  text-transform: uppercase;
+  letter-spacing: 0.42em;
+  padding-left: 0.42em;
+  color: var(--text-dim);
+  font-size: clamp(13px, 1.3vw, 22px);
+  font-weight: 600;
+}
+
+.game-lobby__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  max-width: 94%;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  background: var(--g-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 24px 60px rgba(var(--g-accent-rgb), 0.32));
+}
+
+.game-lobby__desc {
+  max-width: min(1120px, 88%);
+  color: var(--text-muted);
+  font-size: clamp(16px, 1.5vw, 26px);
+  line-height: 1.55;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.game-lobby__teams {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(8px, 1vw, 16px);
+  max-width: min(1500px, 94%);
+  max-height: 32vh;
+  overflow: hidden;
+  margin-top: clamp(4px, 1vh, 12px);
+}
+
+.game-lobby__empty {
+  color: var(--text-dim);
+  font-size: clamp(15px, 1.4vw, 22px);
+  font-style: italic;
+}
+
+.game-lobby__waiting {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.5em 1.3em;
+  border-radius: 999px;
+  background: var(--g-soft);
+  border: 1px solid var(--g-line);
+  color: var(--g-soft-text);
+  font-size: clamp(16px, 1.5vw, 26px);
+  font-weight: 600;
+  animation: game-pulse-soft 3.4s ease-in-out infinite;
+}
+
+.game-lobby__pulse {
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: var(--g-accent-2);
+  box-shadow: 0 0 14px rgba(var(--g-accent-2-rgb), 0.9);
+  animation: game-blink 2.2s ease-in-out infinite;
+}
+
+/* ---------- Заставка раунда ---------- */
+
+.game-round-intro {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.5vh, 22px);
+  text-align: center;
+  padding-bottom: clamp(8px, 1.6vh, 24px);
+}
+
+.game-round-intro__rings {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.game-round-intro__rings span {
+  position: absolute;
+  width: min(58vh, 42vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--g-accent-rgb), 0.22);
+  animation: game-ring 5.4s var(--ease) infinite;
+}
+
+.game-round-intro__rings span:nth-child(2) {
+  animation-delay: 1.8s;
+}
+
+.game-round-intro__rings span:nth-child(3) {
+  animation-delay: 3.6s;
+}
+
+.game-round-intro__kicker {
+  position: relative;
+  z-index: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  font-size: clamp(13px, 1.25vw, 20px);
+  font-weight: 600;
+}
+
+.game-round-intro__headline {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.1em;
+  line-height: 0.9;
+}
+
+.game-round-intro__word {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: clamp(42px, 5.4vw, 104px);
+  color: var(--text-muted);
+}
+
+.game-round-intro__number {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(110px, 16.5vw, 300px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  background: var(--g-title-2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 26px 70px rgba(var(--g-accent-rgb), 0.5));
+}
+
+.game-round-intro__title {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-weight: 750;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  max-width: 92%;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.game-round-intro__meta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.game-round-intro__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.38em 1.1em;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: clamp(14px, 1.3vw, 22px);
+  font-weight: 600;
+}
+
+.game-round-intro__hint {
+  position: relative;
+  z-index: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  padding-left: 0.24em;
+  color: var(--g-hint);
+  font-size: clamp(17px, 1.7vw, 28px);
+  font-weight: 650;
+  animation: game-pulse-soft 3s ease-in-out infinite;
+}
+
+/* ---------- Вопрос: верхняя строка ---------- */
+
+.game-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(14px, 2vw, 36px);
+  flex-wrap: wrap;
+}
+
+.game-topbar__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(10px, 1.4vw, 22px);
+  min-width: 0;
+  padding-top: clamp(2px, 0.8vh, 12px);
+}
+
+.game-round-label {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 32px);
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+  max-width: 40vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.game-counter {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  font-size: clamp(13px, 1.3vw, 20px);
+  font-weight: 600;
+}
+
+.game-points {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.32em 0.9em;
+  border-radius: 999px;
+  background: var(--g-soft);
+  border: 1px solid var(--g-line);
+  color: var(--g-points-text);
+  font-size: clamp(15px, 1.4vw, 24px);
+  font-weight: 650;
+  box-shadow: 0 12px 32px -18px rgba(var(--g-accent-rgb), 0.9);
+}
+
+.game-points__star {
+  color: #ffd977;
+  font-size: 0.9em;
+  line-height: 1;
+}
+
+.game-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(4px, 0.8vh, 10px);
+  flex: 0 0 auto;
+}
+
+.game-timer__ended {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--bad);
+  font-size: clamp(14px, 1.25vw, 21px);
+  font-weight: 700;
+  animation: game-pulse-soft 1.4s ease-in-out infinite;
+}
+
+/* ---------- Вопрос: текст и медиа ---------- */
+
+.game-screen--question .game-question {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2vh, 30px);
+  overflow: hidden;
+  padding: clamp(6px, 1.4vh, 22px) 0 clamp(2px, 0.8vh, 10px);
+}
+
+.game-question__text {
+  flex: 0 0 auto;
+  max-width: 94%;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 750;
+  line-height: 1.16;
+  letter-spacing: -0.018em;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: var(--text);
+  text-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  animation: game-fade-up 420ms var(--ease) both;
+}
+
+/* ---------- Медиа-зона ---------- */
+
+.game-media {
+  width: min(100%, 1620px);
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 1.8vh, 26px);
+}
+
+.game-media--audio-only {
+  flex: 0 0 auto;
+}
+
+.game-media__visual {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-media__image {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius);
+  filter: drop-shadow(0 34px 70px rgba(0, 0, 0, 0.5));
+  animation: game-media-in 520ms var(--ease) both;
+}
+
+.game-media__video {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+  border-radius: var(--radius);
+  background: #000;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  animation: game-media-in 520ms var(--ease) both;
+}
+
+.game-media__fallback {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(16px, 2vh, 28px) clamp(20px, 2vw, 36px);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-strong);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-dim);
+  font-size: clamp(15px, 1.4vw, 22px);
+}
+
+.game-media__fallback-icon {
+  width: 1.9em;
+  height: 1.9em;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: var(--bad);
+  font-weight: 800;
+}
+
+/* ---------- Аудио-плеер ---------- */
+
+.game-audio {
+  width: min(1080px, 86%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 1.4vh, 18px);
+  padding: clamp(16px, 2.4vh, 32px) clamp(18px, 2.2vw, 40px);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  box-shadow: var(--shadow-lg);
+  animation: game-fade-up 420ms var(--ease) both;
+}
+
+.game-audio__el {
+  display: none;
+}
+
+.game-audio__art {
+  display: flex;
+  align-items: center;
+  gap: clamp(5px, 0.5vw, 8px);
+  height: clamp(30px, 4.2vh, 58px);
+}
+
+.game-audio__bar {
+  width: clamp(4px, 0.45vw, 8px);
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--g-accent-2), var(--g-accent));
+  transform: scaleY(0.42);
+  transform-origin: bottom center;
+  opacity: 0.5;
+  transition: opacity 240ms var(--ease);
+}
+
+.game-audio--playing .game-audio__bar {
+  opacity: 1;
+  animation: game-eq 1s ease-in-out infinite alternate;
+}
+
+.game-audio__bar:nth-child(1) {
+  height: 40%;
+  animation-duration: 900ms;
+}
+
+.game-audio__bar:nth-child(2) {
+  height: 78%;
+  animation-duration: 1200ms;
+}
+
+.game-audio__bar:nth-child(3) {
+  height: 52%;
+  animation-duration: 780ms;
+}
+
+.game-audio__bar:nth-child(4) {
+  height: 100%;
+  animation-duration: 1350ms;
+}
+
+.game-audio__bar:nth-child(5) {
+  height: 64%;
+  animation-duration: 980ms;
+}
+
+.game-audio__bar:nth-child(6) {
+  height: 34%;
+  animation-duration: 1120ms;
+}
+
+.game-audio__note {
+  margin-left: clamp(8px, 1vw, 18px);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  font-size: clamp(11px, 1vw, 16px);
+  font-weight: 600;
+}
+
+.game-audio__controls {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.6vw, 24px);
+  width: 100%;
+}
+
+.game-audio__btn {
+  flex: 0 0 auto;
+  width: clamp(44px, 4.6vh, 66px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  cursor: pointer;
+  font-size: clamp(18px, 1.8vw, 28px);
+  transition:
+    background 160ms var(--ease),
+    transform 140ms var(--ease),
+    border-color 160ms var(--ease);
+}
+
+.game-audio__btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.game-audio__btn:active {
+  transform: translateY(1px);
+}
+
+.game-audio__btn:focus-visible {
+  outline: 2px solid var(--g-accent-2);
+  outline-offset: 3px;
+}
+
+.game-audio__btn--play {
+  background: var(--g-play);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 14px 34px -16px rgba(var(--g-accent-rgb), 0.95);
+}
+
+.game-audio__btn--play:hover {
+  background: var(--g-play-hover);
+}
+
+.game-audio__center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1vh, 10px);
+}
+
+.game-audio__track {
+  position: relative;
+  height: clamp(8px, 1vh, 12px);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.game-audio__track:focus-visible {
+  outline: 2px solid var(--g-accent-2);
+  outline-offset: 6px;
+}
+
+.game-audio__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--g-accent), var(--g-accent-2));
+  box-shadow: 0 0 20px rgba(var(--g-accent-2-rgb), 0.45);
+}
+
+.game-audio__thumb {
+  position: absolute;
+  top: 50%;
+  width: clamp(12px, 1.5vh, 18px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 16px rgba(var(--g-accent-rgb), 0.85);
+}
+
+.game-audio__time {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: clamp(12px, 1.1vw, 17px);
+}
+
+.game-audio__duration {
+  color: var(--text-dim);
+}
+
+/* ---------- Повторный просмотр перед сдачей бланков ---------- */
+
+.game-review-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.34em 0.95em;
+  border-radius: 999px;
+  border: 1px solid var(--g-line);
+  background: var(--g-soft);
+  color: var(--g-soft-text);
+  font-size: clamp(12px, 1.1vw, 18px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  box-shadow: 0 10px 26px -20px rgba(var(--g-accent-rgb), 0.9);
+}
+
+.game-timer--compact {
+  gap: clamp(2px, 0.4vh, 6px);
+}
+
+/* ---------- Сдача бланков ---------- */
+
+.game-handin {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vh, 30px);
+  text-align: center;
+  padding-bottom: clamp(6px, 1.4vh, 20px);
+}
+
+.game-handin__halo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.game-handin__halo span {
+  position: absolute;
+  width: min(76vh, 60vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--g-accent-rgb), 0.16);
+  animation: game-halo 8.4s var(--ease) infinite;
+}
+
+.game-handin__halo span:nth-child(2) {
+  animation-delay: 2.8s;
+}
+
+.game-handin__halo span:nth-child(3) {
+  animation-delay: 5.6s;
+}
+
+.game-handin__kicker {
+  position: relative;
+  z-index: 1;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  font-size: clamp(13px, 1.25vw, 20px);
+  font-weight: 600;
+}
+
+.game-handin__title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 94%;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(46px, 6.6vw, 132px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-wrap: balance;
+  background: var(--g-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 26px 80px rgba(var(--g-accent-rgb), 0.35));
+  animation: game-breathe-soft 6.5s ease-in-out infinite;
+}
+
+.game-handin__countdown {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  filter: drop-shadow(0 30px 80px rgba(var(--g-accent-rgb), 0.28));
+}
+
+.game-handin__caption {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--g-hint);
+  font-family: var(--font-display);
+  font-size: clamp(19px, 2vw, 36px);
+  font-weight: 650;
+  letter-spacing: 0.03em;
+}
+
+/* ---------- Правильные ответы на раунд ---------- */
+
+.game-screen--round-answers {
+  gap: clamp(10px, 1.6vh, 22px);
+}
+
+.game-answers__head {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(4px, 0.8vh, 10px);
+  text-align: center;
+}
+
+.game-answers__kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  font-size: clamp(12px, 1.15vw, 18px);
+  font-weight: 600;
+}
+
+.game-answers__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(34px, 3.8vw, 68px);
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  background: var(--g-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 18px 54px rgba(var(--g-accent-rgb), 0.3));
+}
+
+.game-answers__meta {
+  color: var(--text-muted);
+  font-size: clamp(14px, 1.3vw, 22px);
+  font-weight: 600;
+}
+
+.game-answers__empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  font-size: clamp(18px, 1.8vw, 30px);
+  font-style: italic;
+}
+
+.game-answers__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: clamp(10px, 1.4vh, 18px) clamp(12px, 1.4vw, 22px);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.9vh, 12px);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--g-panel-line);
+  background: var(--g-panel);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.game-answers__list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.game-answers__list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.game-answer-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7em;
+  padding: 0.5em 0.6em;
+  border-radius: var(--radius);
+  border: 1px solid rgba(var(--g-accent-rgb), 0.14);
+  background: rgba(255, 255, 255, 0.035);
+  animation: game-row-in 420ms var(--ease) both;
+}
+
+.game-answer-row__number {
+  flex: 0 0 auto;
+  min-width: 1.9em;
+  height: 1.9em;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--g-line);
+  background: var(--g-soft);
+  color: var(--g-soft-text);
+  font-size: 0.72em;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.game-answer-row__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.16em;
+}
+
+.game-answer-row__question {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.62em;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.game-answer-row__answer {
+  font-family: var(--font-display);
+  font-weight: 750;
+  font-size: 1em;
+  line-height: 1.16;
+  color: var(--g-answer);
+  overflow-wrap: anywhere;
+  text-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+
+.game-answer-row__explanation {
+  margin: 0.12em 0 0;
+  color: var(--text-dim);
+  font-size: 0.5em;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---------- Итоги раунда ---------- */
+
+.game-summary {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.8vh, 26px);
+  text-align: center;
+}
+
+.game-summary__kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  font-size: clamp(13px, 1.25vw, 20px);
+  font-weight: 600;
+}
+
+.game-summary__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(52px, 6.8vw, 144px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  background: var(--g-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 26px 70px rgba(var(--g-accent-rgb), 0.35));
+}
+
+.game-summary__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.46em 1.3em;
+  border-radius: 999px;
+  background: var(--g-soft);
+  border: 1px solid var(--g-line);
+  color: var(--g-soft-text);
+  font-size: clamp(15px, 1.4vw, 24px);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  animation: game-pulse-soft 2.8s ease-in-out infinite;
+}
+
+.game-summary__dot {
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 50%;
+  background: var(--g-accent-2);
+  box-shadow: 0 0 16px rgba(var(--g-accent-2-rgb), 0.9);
+}
+
+.game-summary__hint {
+  max-width: min(980px, 86%);
+  color: var(--text-muted);
+  font-size: clamp(17px, 1.7vw, 28px);
+  line-height: 1.5;
+  text-wrap: balance;
+}
+
+.game-summary__teams {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(8px, 1vw, 16px);
+  max-width: min(1400px, 92%);
+  max-height: 26vh;
+  overflow: hidden;
+  margin-top: clamp(6px, 1.4vh, 18px);
+}
+
+/* ---------- Финал ---------- */
+
+.game-results {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+  gap: clamp(18px, 2.8vw, 54px);
+  align-items: stretch;
+}
+
+.game-results__hero {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(6px, 1vh, 14px);
+}
+
+.game-results__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  font-size: clamp(12px, 1.1vw, 18px);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-results__label {
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  padding-left: 0.3em;
+  color: var(--g-accent-2);
+  font-size: clamp(17px, 1.7vw, 28px);
+  font-weight: 700;
+}
+
+.game-results__winner {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1.03;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  background: linear-gradient(120deg, #ffffff, #ffe6a3 32%, #ffd166 52%, #b9aeff 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 26px 70px rgba(251, 191, 36, 0.28));
+}
+
+.game-results__congrats {
+  color: var(--text-muted);
+  font-size: clamp(16px, 1.5vw, 26px);
+}
+
+.game-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(10px, 1.2vw, 22px);
+  margin-top: clamp(12px, 2.2vh, 32px);
+  animation: game-fade-up 640ms var(--ease) 120ms both;
+}
+
+.game-podium__item {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(8px, 1.2vh, 14px);
+}
+
+.game-podium__team {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.game-podium__name {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 1.55vw, 27px);
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.game-podium__score {
+  margin-top: 0.2em;
+  font-size: clamp(20px, 1.9vw, 34px);
+  font-weight: 800;
+  color: var(--text);
+}
+
+.game-podium__block {
+  width: 100%;
+  height: clamp(110px, 16vh, 200px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: clamp(8px, 1.2vh, 18px);
+  border-radius: var(--radius) var(--radius) 0 0;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.game-podium__place {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 3.4vw, 70px);
+  font-weight: 800;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.game-podium__item--p1 .game-podium__block {
+  height: clamp(150px, 23vh, 280px);
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.34), rgba(251, 191, 36, 0.06));
+  border-color: rgba(251, 191, 36, 0.45);
+  box-shadow:
+    0 0 70px -24px rgba(251, 191, 36, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.game-podium__item--p1 .game-podium__place {
+  color: #ffe08a;
+}
+
+.game-podium__item--p2 .game-podium__block {
+  height: clamp(120px, 18vh, 220px);
+  background: linear-gradient(180deg, rgba(203, 213, 225, 0.26), rgba(203, 213, 225, 0.05));
+  border-color: rgba(203, 213, 225, 0.4);
+}
+
+.game-podium__item--p2 .game-podium__place {
+  color: #dbe3ef;
+}
+
+.game-podium__item--p3 .game-podium__block {
+  height: clamp(98px, 14.5vh, 180px);
+  background: linear-gradient(180deg, rgba(217, 140, 86, 0.28), rgba(217, 140, 86, 0.05));
+  border-color: rgba(217, 140, 86, 0.42);
+}
+
+.game-podium__item--p3 .game-podium__place {
+  color: #f0c19b;
+}
+
+/* ---------- Таблица итогов ---------- */
+
+.game-results__board {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.6vh, 22px);
+  padding: clamp(16px, 1.8vw, 30px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.game-results__board::-webkit-scrollbar {
+  width: 10px;
+}
+
+.game-results__board::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.game-results__board-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.game-results__board-title {
+  font-size: clamp(16px, 1.5vw, 24px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.game-results__board-meta {
+  color: var(--text-dim);
+  font-size: clamp(12px, 1.05vw, 16px);
+}
+
+.game-results__table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.game-results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.game-results-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px 10px;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  font-size: clamp(11px, 1vw, 14px);
+  font-weight: 650;
+  background: rgba(var(--g-bg-rgb), 0.92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+}
+
+.game-results-table tbody td {
+  padding: clamp(7px, 1vh, 14px) 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: clamp(15px, 1.35vw, 22px);
+}
+
+.game-results-table tbody tr {
+  animation: game-row-in 420ms var(--ease) both;
+}
+
+.game-results-table tbody tr.is-winner td {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.16), rgba(251, 191, 36, 0.015));
+}
+
+.game-results-table__place {
+  width: 4.4em;
+  text-align: center;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.game-results-table thead .game-results-table__place {
+  text-align: center;
+}
+
+.game-results-table tbody tr.is-winner .game-results-table__place {
+  color: #ffd977;
+}
+
+.game-results-table__name {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.game-results-table tbody tr.is-winner .game-results-table__name {
+  color: #fff4d0;
+}
+
+.game-results-table__score {
+  width: 5.5em;
+  text-align: right;
+  font-weight: 700;
+}
+
+.game-results-table tbody tr.is-winner .game-results-table__score {
+  color: #ffe08a;
+}
+
+/* ---------- Награды ---------- */
+
+.game-awards {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.1vh, 14px);
+  padding-top: clamp(10px, 1.4vh, 18px);
+  border-top: 1px solid var(--border);
+}
+
+.game-awards__head {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  font-size: clamp(11px, 1vw, 14px);
+  font-weight: 700;
+}
+
+.game-awards__list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.9vh, 12px);
+}
+
+.game-award {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(8px, 1vw, 14px);
+  padding: clamp(8px, 1vh, 14px) clamp(10px, 1.1vw, 16px);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.game-award__medal {
+  flex: 0 0 auto;
+  width: clamp(26px, 2.4vw, 38px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(120% 120% at 30% 20%, #ffe9a8, #d69a2a 70%, #a86f12);
+  color: #2a1d04;
+  font-size: clamp(13px, 1.2vw, 18px);
+  box-shadow: 0 6px 18px -8px rgba(251, 191, 36, 0.9);
+}
+
+.game-award__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.game-award__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.game-award__title {
+  font-weight: 700;
+  font-size: clamp(14px, 1.2vw, 19px);
+}
+
+.game-award__teams {
+  color: #ffd977;
+  font-weight: 650;
+  font-size: clamp(12px, 1.05vw, 16px);
+}
+
+.game-award__desc {
+  color: var(--text-muted);
+  font-size: clamp(12px, 1vw, 15px);
+  line-height: 1.4;
+}
+
+/* ---------- Пауза ---------- */
+
+.game-pause {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgba(var(--g-bg-rgb), 0.55);
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 320ms var(--ease),
+    visibility 320ms var(--ease);
+}
+
+.game-pause--open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.game-pause__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 1.6vh, 24px);
+  text-align: center;
+  transform: scale(0.94);
+  transition: transform 420ms var(--ease);
+}
+
+.game-pause--open .game-pause__content {
+  transform: scale(1);
+}
+
+.game-pause__bars {
+  display: flex;
+  gap: clamp(12px, 1.6vw, 26px);
+}
+
+.game-pause__bars span {
+  display: block;
+  width: clamp(22px, 3vw, 56px);
+  height: clamp(52px, 7vh, 104px);
+  border-radius: 999px;
+  background: var(--g-bars);
+  box-shadow: 0 0 60px rgba(var(--g-accent-rgb), 0.65);
+  animation: game-bars 2.4s ease-in-out infinite;
+}
+
+.game-pause__bars span:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.game-pause__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(70px, 12vw, 210px);
+  line-height: 0.95;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  text-transform: uppercase;
+  background: var(--g-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.game-pause__hint {
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  padding-left: 0.3em;
+  color: var(--text-muted);
+  font-size: clamp(13px, 1.2vw, 20px);
+  font-weight: 600;
+}
+
+/* ---------- Подсказка F11 ---------- */
+
+.game-hint {
+  position: fixed;
+  z-index: 60;
+  right: clamp(14px, 1.6vw, 28px);
+  bottom: clamp(12px, 1.6vh, 24px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(var(--g-bg-rgb), 0.72);
+  color: var(--text-dim);
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 240ms var(--ease),
+    transform 240ms var(--ease);
+  pointer-events: none;
+}
+
+.game-hint--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.game-hint__key {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+/* ---------- Анимации ---------- */
+
+@keyframes game-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.994);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes game-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes game-media-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes game-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes game-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes game-ring {
+  0% {
+    transform: scale(0.58);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(1.32);
+    opacity: 0;
+  }
+}
+
+@keyframes game-halo {
+  0% {
+    transform: scale(0.72);
+    opacity: 0.55;
+  }
+  55% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+@keyframes game-pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+
+@keyframes game-blink {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes game-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow:
+      0 30px 80px -30px rgba(var(--g-accent-rgb), 0.9),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow:
+      0 40px 110px -34px rgba(var(--g-accent-rgb), 1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+}
+
+/* «Дыхание» крупной надписи на экране сдачи бланков: спокойное, без рывков */
+@keyframes game-breathe-soft {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.88;
+    transform: translateY(-4px) scale(1.008);
+  }
+}
+
+@keyframes game-snow {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -60px 360px;
+  }
+}
+
+/* Лепестки весны и листья осени движутся вниз по диагонали */
+@keyframes game-petals {
+  from {
+    background-position:
+      0 -120px,
+      0 -80px,
+      0 -160px,
+      0 -40px,
+      0 -200px,
+      0 -140px,
+      0 -60px;
+  }
+  to {
+    background-position:
+      90px 460px,
+      -70px 520px,
+      60px 480px,
+      -110px 560px,
+      70px 500px,
+      -50px 540px,
+      40px 460px;
+  }
+}
+
+@keyframes game-leaves {
+  from {
+    background-position: 0 -260px;
+  }
+  to {
+    background-position: 90px 260px;
+  }
+}
+
+/* Сердца поднимаются вверх */
+@keyframes game-hearts {
+  from {
+    background-position: 0 240px;
+  }
+  to {
+    background-position: 40px -240px;
+  }
+}
+
+@keyframes game-fireflies {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.6;
+  }
+}
+
+@keyframes game-glow-drift {
+  from {
+    transform: translate3d(-1.2%, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(1.2%, -0.8%, 0) scale(1.05);
+  }
+}
+
+@keyframes game-beam {
+  from {
+    transform: translateX(-2%) scale(1);
+  }
+  to {
+    transform: translateX(2%) scale(1.03);
+  }
+}
+
+@keyframes game-bars {
+  0%,
+  100% {
+    transform: scaleY(0.62);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes game-eq {
+  from {
+    transform: scaleY(0.32);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* ---------- Адаптивность ---------- */
+
+@media (max-width: 1180px) {
+  .game-results {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  .game-results__board {
+    overflow: visible;
+  }
+
+  .game-podium__item {
+    max-width: 200px;
+  }
+}
+
+@media (max-height: 820px) {
+  .game-screen {
+    padding: 18px clamp(24px, 3.6vw, 64px) 16px;
+  }
+
+  .game-round-label {
+    font-size: clamp(16px, 1.7vw, 24px);
+  }
+
+  .game-handin__title {
+    font-size: clamp(38px, 5.4vw, 96px);
+  }
+
+  .game-answers__title {
+    font-size: clamp(28px, 3vw, 50px);
+  }
+
+  .game-answer-row__explanation {
+    -webkit-line-clamp: 1;
+  }
+}

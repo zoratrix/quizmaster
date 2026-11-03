@@ -1,0 +1,807 @@
+/* ==========================================================================
+   Редактор игровых паков
+   ========================================================================== */
+
+.editor-root {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  overflow: hidden;
+}
+
+/* ---------- Верхняя панель ---------- */
+
+.editor-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 20px 12px 18px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(12, 16, 30, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-app-region: drag;
+}
+
+.editor-topbar button,
+.editor-topbar input {
+  -webkit-app-region: no-drag;
+}
+
+.editor-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.editor-brand__mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 750;
+  font-size: 21px;
+  color: #fff;
+  background: linear-gradient(140deg, #8b7bff, #4f3ee6);
+  box-shadow:
+    0 10px 24px -12px rgba(124, 108, 245, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  flex: 0 0 auto;
+}
+
+.editor-brand__title {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 2px 8px;
+  margin-left: -8px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 650;
+  color: var(--text);
+  width: min(460px, 42vw);
+  outline: none;
+  transition: border-color 140ms var(--ease), background 140ms var(--ease);
+}
+
+.editor-brand__title:hover {
+  border-color: var(--border);
+}
+
+.editor-brand__title:focus {
+  border-color: var(--accent-line);
+  background: rgba(8, 11, 22, 0.6);
+}
+
+/* ---------- Баннер ---------- */
+
+.editor-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 20px;
+  font-size: 13.5px;
+  color: #e8e2ff;
+  background: linear-gradient(90deg, rgba(124, 108, 245, 0.22), rgba(34, 211, 238, 0.1));
+  border-bottom: 1px solid var(--accent-line);
+}
+
+/* ---------- Основная область ---------- */
+
+.editor-body {
+  display: grid;
+  grid-template-columns: 240px 320px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.editor-rails {
+  display: contents;
+}
+
+.rails-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--border);
+  background: rgba(10, 13, 24, 0.42);
+}
+
+.rails-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 14px 10px;
+}
+
+.rails-panel__head--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.rails-panel__list {
+  flex: 1;
+  min-height: 0;
+  padding: 4px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rails-panel__foot {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- Список раундов ---------- */
+
+.round-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 140ms var(--ease), border-color 140ms var(--ease);
+}
+
+.round-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.round-item.is-active {
+  background: linear-gradient(120deg, rgba(124, 108, 245, 0.22), rgba(124, 108, 245, 0.06));
+  border-color: var(--accent-line);
+}
+
+.round-item__number {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.round-item.is-active .round-item__number {
+  color: #fff;
+  background: linear-gradient(140deg, #8b7bff, #5b4ae8);
+}
+
+.round-item__title {
+  font-weight: 550;
+  font-size: 14px;
+}
+
+.round-item__actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 140ms var(--ease);
+}
+
+.round-item:hover .round-item__actions,
+.round-item.is-active .round-item__actions {
+  opacity: 1;
+}
+
+.mini-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  transition: background 120ms var(--ease), color 120ms var(--ease);
+}
+
+.mini-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text);
+}
+
+.mini-btn:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.mini-btn--danger:hover:not(:disabled) {
+  background: var(--bad-soft);
+  color: #ffd0d0;
+}
+
+.round-title-input {
+  font-weight: 600;
+  font-size: 14px;
+  padding: 7px 10px;
+}
+
+/* ---------- Список вопросов ---------- */
+
+.question-item {
+  display: flex;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 140ms var(--ease), border-color 140ms var(--ease);
+}
+
+.question-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.question-item.is-active {
+  background: linear-gradient(120deg, rgba(34, 211, 238, 0.14), rgba(124, 108, 245, 0.08));
+  border-color: rgba(34, 211, 238, 0.35);
+}
+
+.question-item.is-empty .question-item__text {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.question-item__number {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.06);
+  margin-top: 1px;
+}
+
+.question-item.is-active .question-item__number {
+  color: #06202a;
+  background: var(--accent-2);
+}
+
+.question-item__text {
+  font-size: 13.5px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.question-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.question-item__meta .badge {
+  height: 18px;
+  font-size: 10.5px;
+  padding: 0 7px;
+}
+
+/* ---------- Редактор вопроса ---------- */
+
+.editor-main {
+  min-width: 0;
+  min-height: 0;
+  padding: 20px 24px 28px;
+}
+
+.question-editor {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.question-editor__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.question-editor__title {
+  font-size: 22px;
+  margin-top: 8px;
+}
+
+.question-editor__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.question-editor__section {
+  padding: 16px 18px;
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+.question-editor__section--text {
+  background: linear-gradient(180deg, rgba(124, 108, 245, 0.1), rgba(124, 108, 245, 0.03));
+  border: 1px solid rgba(124, 108, 245, 0.25);
+}
+
+.question-editor__question-text {
+  min-height: 108px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.question-editor__params {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 220px));
+  gap: 14px;
+}
+
+.question-editor__media {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------- Медиа ---------- */
+
+.media-field {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 140ms var(--ease);
+}
+
+.media-field:hover {
+  border-color: var(--border-strong);
+}
+
+.media-field__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.media-field__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.07);
+  flex: 0 0 auto;
+}
+
+.media-field__title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.media-field__hint {
+  max-width: 460px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-field__body {
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.media-field__image {
+  display: block;
+  max-height: 260px;
+  max-width: 100%;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.media-field__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 18px;
+  border-radius: 10px;
+  border: 1px dashed var(--border-strong);
+  background: rgba(255, 255, 255, 0.015);
+  color: var(--text-muted);
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background 140ms var(--ease), border-color 140ms var(--ease), color 140ms var(--ease);
+}
+
+.media-field__empty:hover {
+  border-color: rgba(124, 108, 245, 0.55);
+  background: rgba(124, 108, 245, 0.08);
+  color: var(--text);
+}
+
+.media-field__empty-icon {
+  font-size: 22px;
+  opacity: 0.8;
+}
+
+.audio-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.audio-player__play {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  color: #dcd7ff;
+  font-size: 12px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.audio-player__play:hover {
+  background: rgba(124, 108, 245, 0.32);
+}
+
+.audio-player__seek {
+  flex: 1;
+  min-width: 60px;
+  accent-color: var(--accent);
+  height: 4px;
+}
+
+.video-player__video {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+  background: #000;
+}
+
+/* ---------- Демо-паки и копирование ---------- */
+
+.demo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.demo-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.demo-item__title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.copy-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.copy-option input {
+  accent-color: var(--accent);
+}
+
+.copy-option.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------- Статусная строка ---------- */
+
+.editor-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 20px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  background: rgba(10, 13, 24, 0.7);
+}
+
+@media (max-width: 1280px) {
+  .editor-body {
+    grid-template-columns: 210px 280px minmax(0, 1fr);
+  }
+
+  .editor-brand__title {
+    width: min(300px, 30vw);
+  }
+}
+
+/* ---------- Выбор темы пака ---------- */
+
+.theme-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.theme-picker__head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.theme-picker__title {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.theme-picker__hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.theme-picker__caption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.theme-picker__caption strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.theme-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.theme-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.theme-group__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.theme-group__title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.theme-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 140ms var(--ease), background 140ms var(--ease), transform 120ms var(--ease);
+}
+
+.theme-card:hover {
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.theme-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.theme-card.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(124, 108, 245, 0.25);
+  background: rgba(124, 108, 245, 0.1);
+}
+
+.theme-card__preview {
+  display: block;
+  width: 100%;
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.theme-card__label {
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--text);
+}
+
+.theme-card__check {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.8);
+}
+
+/* ---------- Живой предпросмотр игрового экрана (16:9) ---------- */
+
+/*
+ * Предпросмотр — уменьшенная копия настоящего игрового экрана.
+ * В game.css .game-root стоит position: fixed, поэтому внутри модалки он
+ * переопределяется на absolute и живёт в рамке с overflow: hidden.
+ * Масштаб типографики считается от ширины карточки: ThemePreview ставит
+ * переменную --tp-w (по умолчанию 640px — ширина предпросмотра).
+ */
+.theme-preview {
+  --tp-w: 640px;
+
+  position: relative;
+  display: block;
+  width: min(640px, 100%);
+  aspect-ratio: 16 / 9;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  box-shadow: 0 20px 44px -30px rgba(0, 0, 0, 0.95);
+  isolation: isolate;
+}
+
+.theme-preview .game-root {
+  position: absolute;
+  inset: 0;
+}
+
+/* В предпросмотре не нужны анимации и переходы, которые «двигают» модалку. */
+.theme-preview .game-root,
+.theme-preview .game-root *,
+.theme-preview .game-root::before,
+.theme-preview .game-root::after,
+.theme-preview .game-root *::before,
+.theme-preview .game-root *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Масштаб игровой вёрстки под ширину карточки предпросмотра. */
+.theme-preview .game-screen {
+  padding: calc(var(--tp-w) * 0.032) calc(var(--tp-w) * 0.04) calc(var(--tp-w) * 0.028);
+}
+
+.theme-preview .game-topbar {
+  gap: calc(var(--tp-w) * 0.022);
+}
+
+.theme-preview .game-topbar__meta {
+  gap: calc(var(--tp-w) * 0.017);
+  padding-top: 0;
+}
+
+.theme-preview .game-round-label {
+  max-width: 45%;
+  font-size: clamp(9px, calc(var(--tp-w) * 0.02), 22px);
+}
+
+.theme-preview .game-counter {
+  letter-spacing: 0.1em;
+  font-size: clamp(7px, calc(var(--tp-w) * 0.015), 18px);
+}
+
+.theme-preview .game-points {
+  gap: calc(var(--tp-w) * 0.006);
+  font-size: clamp(8px, calc(var(--tp-w) * 0.016), 19px);
+}
+
+.theme-preview .game-timer {
+  gap: calc(var(--tp-w) * 0.008);
+}
+
+.theme-preview .game-screen--question .game-question {
+  gap: calc(var(--tp-w) * 0.018);
+  padding-top: 0;
+}
+
+.theme-preview .game-question__text {
+  line-height: 1.12;
+  font-size: clamp(11px, calc(var(--tp-w) * 0.05), 46px);
+}
+
+.theme-preview .game-chip {
+  max-width: none;
+  font-size: clamp(7px, calc(var(--tp-w) * 0.017), 18px);
+  box-shadow: 0 6px 16px -12px rgba(0, 0, 0, 0.95);
+}
+
+.theme-preview .theme-preview__teams {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(var(--tp-w) * 0.012);
+}
+
+/* Виньетка и лучи в game.css заданы крупными px — уменьшаем под масштаб.
+   data-phase в селекторе нужен, чтобы перебить светлые виньетки тем
+   (у «Ретро» своя box-shadow на .game-root[data-theme]::after). */
+.theme-preview .game-root[data-phase='question']::after {
+  box-shadow: inset 0 0 calc(var(--tp-w) * 0.12) calc(var(--tp-w) * 0.028) rgba(0, 0, 0, 0.45);
+}
+
+.theme-preview .game-root::before {
+  filter: blur(calc(var(--tp-w) * 0.03));
+}
+
+/* У «Ретро» панель задач нарисована декором фиксированной высоты — уменьшаем. */
+.theme-preview .game-root[data-theme='retro'] .game-root__decor {
+  background-size: 100% calc(var(--tp-w) * 0.022), calc(var(--tp-w) * 0.072) calc(var(--tp-w) * 0.022);
+}

@@ -1,0 +1,10 @@
+node_modules/
+.cache/
+.test-build/
+dist/
+release/
+*.log
+npm-debug.log*
+.vite/
+tests/e2e/artifacts/
+*.tmp

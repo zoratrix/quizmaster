@@ -1,0 +1,40 @@
+﻿appId: ru.quizmaster.app
+productName: QuizMaster
+copyright: QuizMaster
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/main/**/*
+  - dist/preload/**/*
+  - dist/renderer/**/*
+  - package.json
+extraResources:
+  - from: packs
+    to: packs
+    filter:
+      - '**/*'
+asar: true
+asarUnpack: []
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+  artifactName: QuizMaster-${version}-Setup.${ext}
+nsis:
+  oneClick: true
+  perMachine: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: QuizMaster
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+  installerLanguages:
+    - ru_RU
+    - en_US
+  language: '1049'
+  deleteAppDataOnUninstall: false
+
