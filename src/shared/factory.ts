@@ -28,6 +28,7 @@ export function createQuestion(settings?: QuizPack['settings']): Question {
     id: newId('q'),
     text: '',
     answer: '',
+    answerImage: null,
     explanation: '',
     timeLimitSec: settings?.defaultTimeLimitSec ?? DEFAULT_TIME_LIMIT_SEC,
     points: settings?.defaultPoints ?? DEFAULT_POINTS,
@@ -39,6 +40,7 @@ export function createRound(index: number, settings?: QuizPack['settings']): Rou
   return {
     id: newId('r'),
     title: `Раунд ${index + 1}`,
+    cover: null,
     questions: [createQuestion(settings)]
   };
 }
@@ -59,6 +61,7 @@ export function createEmptyPack(): QuizPack {
     createdAt: now,
     updatedAt: now,
     settings,
+    music: [],
     rounds: [createRound(0, settings)]
   };
 }
@@ -78,6 +81,9 @@ export function normalizePack(raw: any): QuizPack {
       defaultPoints: num(raw?.settings?.defaultPoints, DEFAULT_POINTS),
       partialCreditRatio: num(raw?.settings?.partialCreditRatio, PARTIAL_CREDIT_RATIO)
     },
+    music: Array.isArray(raw?.music)
+      ? raw.music.map((asset: unknown) => normalizeAsset(asset, 'audio')).filter((asset: MediaAssetLike | null) => Boolean(asset))
+      : [],
     rounds: Array.isArray(raw?.rounds) ? raw.rounds.map(normalizeRound) : []
   };
   if (pack.rounds.length === 0) pack.rounds = [createRound(0, pack.settings)];
@@ -88,6 +94,7 @@ function normalizeRound(raw: any, i: number): Round {
   return {
     id: typeof raw?.id === 'string' && raw.id ? raw.id : newId('r'),
     title: typeof raw?.title === 'string' && raw.title ? raw.title : `Раунд ${i + 1}`,
+    cover: normalizeAsset(raw?.cover, 'image'),
     questions: Array.isArray(raw?.questions) ? raw.questions.map(normalizeQuestion) : []
   };
 }
@@ -98,6 +105,7 @@ function normalizeQuestion(raw: any): Question {
     id: typeof raw?.id === 'string' && raw.id ? raw.id : newId('q'),
     text: typeof raw?.text === 'string' ? raw.text : '',
     answer: typeof raw?.answer === 'string' ? raw.answer : '',
+    answerImage: normalizeAsset(raw?.answerImage, 'image'),
     explanation: typeof raw?.explanation === 'string' ? raw.explanation : '',
     timeLimitSec: Math.max(1, num(raw?.timeLimitSec, DEFAULT_TIME_LIMIT_SEC)),
     points: Math.max(0, num(raw?.points, DEFAULT_POINTS)),
@@ -158,11 +166,15 @@ export function currentQuestion(pack: QuizPack, roundIndex: number, questionInde
 /** Уникальные медиа-ассеты пака */
 export function collectMedia(pack: QuizPack): MediaAssetLike[] {
   const map = new Map<string, MediaAssetLike>();
+  const add = (asset: MediaAssetLike | null | undefined): void => {
+    if (asset) map.set(asset.id, asset);
+  };
+  for (const asset of pack.music ?? []) add(asset);
   for (const round of pack.rounds) {
+    add(round.cover);
     for (const q of round.questions) {
-      for (const asset of [q.media.image, q.media.audio, q.media.video]) {
-        if (asset) map.set(asset.id, asset);
-      }
+      add(q.answerImage);
+      for (const asset of [q.media.image, q.media.audio, q.media.video]) add(asset);
     }
   }
   return [...map.values()];

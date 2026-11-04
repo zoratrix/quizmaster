@@ -1,6 +1,7 @@
 import type { QuizPack } from '../../../shared/types';
 import { Button } from '../components/Button';
 import { formatBalls, truncate } from '../../../shared/format';
+import { mediaUrl } from '../lib/media';
 
 export interface RoundsPanelProps {
   pack: QuizPack;
@@ -112,6 +113,8 @@ export interface QuestionsPanelProps {
   questionIndex: number;
   onSelectQuestion: (index: number) => void;
   onRenameRound: (title: string) => void;
+  onPickRoundCover: () => void;
+  onClearRoundCover: () => void;
   onAddQuestion: () => void;
   onDuplicateQuestion: () => void;
   onDeleteQuestion: () => void;
@@ -125,6 +128,8 @@ export function QuestionsPanel({
   questionIndex,
   onSelectQuestion,
   onRenameRound,
+  onPickRoundCover,
+  onClearRoundCover,
   onAddQuestion,
   onDuplicateQuestion,
   onDeleteQuestion,
@@ -145,6 +150,36 @@ export function QuestionsPanel({
           onChange={(event) => onRenameRound(event.target.value)}
           title="Название раунда — редактируется здесь"
         />
+        {round.cover ? (
+          <div className="round-cover">
+            <div className="round-cover__preview">
+              <img
+                className="round-cover__thumb"
+                src={mediaUrl(round.cover.id)}
+                alt=""
+                draggable={false}
+              />
+              <div className="grow">
+                <div className="round-cover__title">Обложка раунда</div>
+                <div className="round-cover__meta small dim truncate" title={round.cover.fileName}>
+                  {round.cover.fileName}
+                </div>
+              </div>
+            </div>
+            <div className="round-cover__actions">
+              <Button size="sm" variant="ghost" onClick={onPickRoundCover}>
+                Заменить
+              </Button>
+              <Button size="sm" variant="danger" onClick={onClearRoundCover}>
+                Удалить
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button size="sm" variant="ghost" block onClick={onPickRoundCover}>
+            Добавить обложку
+          </Button>
+        )}
         <div className="row row--between">
           <span className="small dim">Вопросы раунда</span>
           <Button size="sm" variant="primary" onClick={onAddQuestion}>
@@ -163,7 +198,12 @@ export function QuestionsPanel({
           </div>
         ) : (
           round.questions.map((question, index) => {
-            const media = [question.media.image, question.media.audio, question.media.video].filter(Boolean).length;
+            const media = [
+              question.media.image,
+              question.media.audio,
+              question.media.video,
+              question.answerImage
+            ].filter(Boolean).length;
             const empty = !question.text.trim();
             return (
               <div

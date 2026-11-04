@@ -9,6 +9,12 @@ export interface MediaFieldProps {
   kind: MediaKind;
   asset: MediaAsset | null;
   onChange: (asset: MediaAsset | null) => void;
+  /** Заголовок поля. По умолчанию — стандартный для типа медиа. */
+  title?: string;
+  /** Подсказка, пока файл не выбран. По умолчанию — поддерживаемые форматы. */
+  hint?: string;
+  /** Текст пустого состояния вместо «Добавить …». */
+  addLabel?: string;
 }
 
 const LABELS: Record<MediaKind, { title: string; add: string; hint: string; icon: string }> = {
@@ -36,10 +42,13 @@ function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function MediaField({ kind, asset, onChange }: MediaFieldProps) {
+export function MediaField({ kind, asset, onChange, title, hint, addLabel }: MediaFieldProps) {
   const [busy, setBusy] = useState(false);
   const toast = useToast();
   const label = LABELS[kind];
+  const fieldTitle = title ?? label.title;
+  const fieldHint = hint ?? label.hint;
+  const emptyLabel = addLabel ?? label.add;
 
   async function pick(): Promise<void> {
     if (busy) return;
@@ -61,9 +70,9 @@ export function MediaField({ kind, asset, onChange }: MediaFieldProps) {
           {label.icon}
         </span>
         <div className="grow">
-          <div className="media-field__title">{label.title}</div>
+          <div className="media-field__title">{fieldTitle}</div>
           <div className="media-field__hint small dim">
-            {asset ? `${asset.fileName} · ${formatBytes(asset.size)}` : label.hint}
+            {asset ? `${asset.fileName} · ${formatBytes(asset.size)}` : fieldHint}
           </div>
         </div>
         {asset ? (
@@ -93,8 +102,8 @@ export function MediaField({ kind, asset, onChange }: MediaFieldProps) {
       ) : (
         <button type="button" className="media-field__empty" onClick={pick} disabled={busy}>
           <span className="media-field__empty-icon">{label.icon}</span>
-          <span>{busy ? 'Открываем файл…' : label.add}</span>
-          <span className="dim small">{label.hint}</span>
+          <span>{busy ? 'Открываем файл…' : emptyLabel}</span>
+          <span className="dim small">{fieldHint}</span>
         </button>
       )}
     </div>

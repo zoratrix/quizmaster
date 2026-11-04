@@ -1,8 +1,9 @@
 import type { GameState, Round } from '../../../shared/types';
 import { plural } from '../../../shared/stats';
+import { mediaUrl } from '../lib/media';
 import { roundTitleSize } from './textFit';
 
-/** Заставка раунда: «РАУНД N», название раунда и подсказка «Приготовьтесь». */
+/** Заставка раунда: «РАУНД N», название раунда, обложка (если есть) и подсказка «Приготовьтесь». */
 export function RoundIntroView({ state, round }: { state: GameState; round: Round }) {
   const number = state.roundIndex + 1;
   const totalRounds = state.pack.rounds.length;
@@ -11,6 +12,15 @@ export function RoundIntroView({ state, round }: { state: GameState; round: Roun
 
   return (
     <section className="game-screen game-screen--round-intro">
+      {round.cover ? (
+        <img
+          className="game-round-intro__cover"
+          src={mediaUrl(round.cover.id)}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
+      ) : null}
       <div className="game-round-intro">
         <div className="game-round-intro__rings" aria-hidden="true">
           <span />

@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type {
+  BackgroundMusicState,
   DemoPackInfo,
   DisplayInfo,
   DraftInfo,
@@ -24,10 +25,30 @@ import {
   focusWindow,
   getGameWindow,
   moveGameToDisplay,
-  setGameFullscreen
+  setGameFullscreen,
+  broadcast
 } from './windows';
 
 const PACK_FILTER = [{ name: 'Игровой пак QuizMaster', extensions: ['quizpack'] }];
+
+/** Громкость фоновой музыки общая для окон; 0.35 — комфортный уровень по умолчанию. */
+const DEFAULT_MUSIC_STATE: BackgroundMusicState = { volume: 0.35, muted: false, paused: false };
+let musicState: BackgroundMusicState = { ...DEFAULT_MUSIC_STATE };
+
+function clampVolume(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_MUSIC_STATE.volume;
+  return Math.min(1, Math.max(0, value));
+}
+
+function updateMusicState(patch: Partial<BackgroundMusicState>): BackgroundMusicState {
+  musicState = {
+    volume: patch.volume === undefined ? musicState.volume : clampVolume(patch.volume),
+    muted: patch.muted === undefined ? musicState.muted : Boolean(patch.muted),
+    paused: patch.paused === undefined ? musicState.paused : Boolean(patch.paused)
+  };
+  broadcast('game:music', musicState);
+  return musicState;
+}
 
 function ownerOf(event: Electron.IpcMainInvokeEvent): BrowserWindow | null {
   return BrowserWindow.fromWebContents(event.sender);
@@ -128,6 +149,7 @@ export function registerIpc(controller: GameController): void {
 
   ipcMain.handle('pack:prepareGame', async (_event, payload: { pack: QuizPack; packPath: string | null }) => {
     controller.prepare(payload.pack, payload.packPath);
+    updateMusicState({ paused: false });
     createHostWindow();
     createGameWindow();
   });
@@ -188,6 +210,8 @@ export function registerIpc(controller: GameController): void {
   });
 
   ipcMain.handle('game:sessionCheck', async (): Promise<PersistedSession | null> => readSession());
+  ipcMain.handle('game:getMusicState', (): BackgroundMusicState => musicState);
+  ipcMain.handle('game:setMusicState', (_event, patch: Partial<BackgroundMusicState>) => updateMusicState(patch));
 
   ipcMain.handle('game:recoveryInfo', async (): Promise<RecoveryInfo | null> => {
     const session = await readSession();

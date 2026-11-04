@@ -68,6 +68,14 @@ export interface PrepareGamePayload {
   packPath: string | null;
 }
 
+/** Состояние фоновой музыки: громкость, пауза и mute. Живёт в main-процессе. */
+export interface BackgroundMusicState {
+  /** 0..1 */
+  volume: number;
+  muted: boolean;
+  paused: boolean;
+}
+
 export interface QuizApi {
   pack: {
     open(): Promise<OpenPackResult | null>;
@@ -116,6 +124,8 @@ export interface QuizApi {
     openEditorWindow(): Promise<void>;
     focusHost(): Promise<void>;
     closeGameWindow(): Promise<void>;
+    getMusicState(): Promise<BackgroundMusicState>;
+    setMusicState(patch: Partial<BackgroundMusicState>): Promise<BackgroundMusicState>;
   };
   app: {
     version(): Promise<string>;
@@ -126,4 +136,5 @@ export interface QuizApi {
   onTick(callback: (payload: TickPayload) => void): () => void;
   onNotice(callback: (notice: Notice) => void): () => void;
   onFullscreen(callback: (value: boolean) => void): () => void;
+  onMusicState(callback: (state: BackgroundMusicState) => void): () => void;
 }

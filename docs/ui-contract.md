@@ -53,6 +53,30 @@ window.qm.onState(cb) / onTick(cb) / onNotice(cb) // подписки, возв�
 там же живой предпросмотр игрового экрана на реальных стилях игры. Редактор и панель ведущего
 тему не применяют; старые паки нормализуются в «Студию» (`normalizeTheme`).
 
+Медиа пака (с 1.3.0): необязательные `pack.music` (`MediaAsset[]`), `round.cover` и
+`question.answerImage` (`MediaAsset | null`); отдаются через `mediaUrl`. Формат `.quizpack` —
+`SCHEMA_VERSION = 2` (`src/shared/types.ts`): паки `schemaVersion: 1` открываются, новые поля
+заполняются пустыми значениями в `normalizePack`; медиа встраивается в архив и проверяется
+по SHA-256, как раньше. Обложка раунда выводится на заставке (`game/RoundIntroView.tsx`),
+картинка ответа — на экране правильных ответов (`game/RoundAnswersView.tsx`,
+`host/AnswersView.tsx`).
+
+Фоновая музыка (с 1.3.0): плеер живёт в игровом окне (`game/BackgroundMusic.tsx`) и звучит
+только в фазах `lobby`, `round-intro`, `round-handin`, `round-summary`, `finished`; в вопросах
+и при показе ответов молчит. Один трек играет с `loop`, несколько — по кругу по порядку.
+Настройки общие для окон, источник истины — main:
+
+```ts
+interface BackgroundMusicState { volume: number; muted: boolean; paused: boolean }
+
+await window.qm.game.getMusicState();
+await window.qm.game.setMusicState({ volume: 0.5, paused: true });
+window.qm.onMusicState((state) => { … }); // подписка, возвращает unsubscribe
+```
+
+Фанфары — встроенный ассет `src/renderer/src/assets/fanfare.mp3` (в пак не входит), играют
+один раз при первом переходе в `finished`.
+
 ## Библиотека компонентов и утилит
 
 ```tsx

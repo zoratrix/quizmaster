@@ -1,7 +1,7 @@
 // Общие типы приложения QuizMaster. Используются и в main-процессе, и в renderer.
 // ВАЖНО: менять структуру аккуратно — от неё зависит формат .quizpack и сохранённые игры.
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 export const PACK_EXTENSION = '.quizpack';
 export const DEFAULT_TIME_LIMIT_SEC = 60;
 export const DEFAULT_POINTS = 1;
@@ -53,6 +53,8 @@ export interface Question {
   text: string;
   /** Правильный ответ для ведущего */
   answer: string;
+  /** Картинка-иллюстрация к ответу (постер, кадр); показывается вместе с ответом */
+  answerImage: MediaAsset | null;
   /** Необязательное пояснение, показывается после раскрытия ответа */
   explanation: string;
   timeLimitSec: number;
@@ -63,6 +65,8 @@ export interface Question {
 export interface Round {
   id: string;
   title: string;
+  /** Обложка раунда, показывается на заставке */
+  cover: MediaAsset | null;
   questions: Question[];
 }
 
@@ -83,6 +87,8 @@ export interface QuizPack {
   createdAt: string;
   updatedAt: string;
   settings: PackSettings;
+  /** Фоновая музыка пака: треки играют по кругу в паузах игры */
+  music: MediaAsset[];
   rounds: Round[];
 }
 

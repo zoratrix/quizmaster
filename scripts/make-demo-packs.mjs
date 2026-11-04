@@ -15,7 +15,7 @@ import zlib from 'node:zlib';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const packsDir = path.join(root, 'packs');
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 // ---------- Генерация PNG ----------
 
@@ -196,6 +196,7 @@ function question(id, text, answer, explanation = '', points = 1, timeLimitSec =
     id,
     text,
     answer,
+    answerImage: null,
     explanation,
     timeLimitSec,
     points,
@@ -218,7 +219,8 @@ function buildPack({ id, title, description, rounds, theme = 'default' }) {
     createdAt: now,
     updatedAt: now,
     settings: { defaultTimeLimitSec: 60, defaultPoints: 1, partialCreditRatio: 0.5 },
-    rounds
+    music: [],
+    rounds: rounds.map((round) => ({ cover: null, ...round }))
   };
 }
 

@@ -1,5 +1,6 @@
 import type { GameState } from '../../../shared/types';
 import { plural } from '../../../shared/stats';
+import { mediaUrl } from '../lib/media';
 import { answersTextSize } from './textFit';
 
 /**
@@ -46,6 +47,14 @@ export function RoundAnswersView({ state }: { state: GameState }) {
                   <div className="game-answer-row__answer">{answer || '—'}</div>
                   {explanation ? <p className="game-answer-row__explanation">{explanation}</p> : null}
                 </div>
+                {question.answerImage ? (
+                  <img
+                    className="game-answer-row__image"
+                    src={mediaUrl(question.answerImage.id)}
+                    alt={answer}
+                    draggable={false}
+                  />
+                ) : null}
               </li>
             );
           })}

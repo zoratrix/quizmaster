@@ -13,6 +13,7 @@ import { RoundSummaryView } from './RoundSummaryView';
 import { ResultsView } from './ResultsView';
 import { PauseOverlay } from './PauseOverlay';
 import { GameHint } from './GameHint';
+import { BackgroundMusic } from './BackgroundMusic';
 import { useGameFullscreen } from './useGameFullscreen';
 import '../styles/game.css';
 
@@ -128,6 +129,7 @@ export function GameApp() {
     >
       <div className="game-root__glow" aria-hidden="true" />
       <div className="game-root__decor" aria-hidden="true" />
+      <BackgroundMusic state={state} />
       {content}
       <PauseOverlay open={Boolean(state?.paused)} />
       <GameHint />

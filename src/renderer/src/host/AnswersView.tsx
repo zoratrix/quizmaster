@@ -1,6 +1,7 @@
 import type { GameState } from '../../../shared/types';
 import { formatBalls } from '../../../shared/format';
 import { Button } from '../components/Button';
+import { mediaUrl } from '../lib/media';
 import { useRun } from './useRun';
 import type { ScreenControls } from './useGameWindowControls';
 import { Standings } from './Standings';
@@ -77,6 +78,15 @@ export function AnswersView({ state, screen }: AnswersViewProps) {
                     <div className="host-answer-item__explanation small muted">{question.explanation}</div>
                   ) : null}
                 </div>
+                {question.answerImage ? (
+                  <img
+                    className="host-answer-item__image"
+                    src={mediaUrl(question.answerImage.id)}
+                    alt={question.answer ? `Картинка ответа: ${question.answer}` : 'Картинка ответа'}
+                    loading="lazy"
+                    draggable={false}
+                  />
+                ) : null}
                 <span className="badge">{formatBalls(question.points)}</span>
               </li>
             ))}

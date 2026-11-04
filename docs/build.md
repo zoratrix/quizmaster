@@ -96,7 +96,9 @@ npm run build
 1. esbuild собирает main и preload (bundle, `platform: node`, `target: node20`, `format: cjs`,
    `electron` external);
 2. Vite собирает рендерер в `dist/renderer` (`base: './'`, `target: chrome128`,
-   точка входа `src/renderer/index.html`).
+   точка входа `src/renderer/index.html`). Статические ассеты, импортируемые из TSX
+   (например, встроенный звук фанфар `src/renderer/src/assets/fanfare.mp3`), попадают
+   в `dist/renderer/assets`.
 
 Результат: `dist/main/index.js`, `dist/preload/index.js`, `dist/renderer/**`. Именно эти файлы
 попадают в установщик (см. `electron-builder.yml`).
@@ -120,10 +122,10 @@ npm run dist
 - `files`: `dist/main`, `dist/preload`, `dist/renderer`, `package.json`;
 - `asar: true`;
 - `extraResources`: `packs` → `resources/packs` (демо-паки внутри установленной версии);
-- `artifactName: QuizMaster-${version}-Setup.${ext}` → `release\QuizMaster-1.2.0-Setup.exe`;
+- `artifactName: QuizMaster-${version}-Setup.${ext}` → `release\QuizMaster-1.3.0-Setup.exe`;
 - установка для текущего пользователя без вопросов (oneClick), ярлыки, языки ru/en,
   без цифровой подписи (SmartScreen может предупредить);
-- рядом создаётся `release\QuizMaster-1.2.0-portable.zip` (`scripts/make-portable.ps1`) —
+- рядом создаётся `release\QuizMaster-1.3.0-portable.zip` (`scripts/make-portable.ps1`) —
   версия без установки, на случай если установщик блокируется;
 - данные в `%APPDATA%\quizmaster` при удалении не удаляются.
 
@@ -236,7 +238,7 @@ npm run e2e
 2. `npm test` — все юнит-тесты проходят.
 3. `npm run build` — собирается.
 4. `npm run e2e` — «ВСЁ ОК» по всем трём сценариям, скриншоты просмотрены.
-5. `BUILD.bat` — созданы `release\QuizMaster-1.2.0-Setup.exe` и `release\QuizMaster-1.2.0-portable.zip`.
+5. `BUILD.bat` — созданы `release\QuizMaster-1.3.0-Setup.exe` и `release\QuizMaster-1.3.0-portable.zip`.
 6. `node tests/e2e/packaged.mjs` — «ВСЁ ОК» (собранная версия запускается).
 7. Установщик проверен на обычной машине: приложение ставится, редактор открывается, демо-пак запускается.
 7. `CONTEXT.md` и `CHANGELOG.md` обновлены; `TODO.md` отражает оставшиеся задачи.

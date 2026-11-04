@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactElement, type ReactNode } from 'react';
 import '../styles/host.css';
 import type { RecoveryInfo } from '../../../shared/api';
 import { useGameState } from '../hooks/useGameState';
@@ -12,6 +12,7 @@ import { HandInView } from './HandInView';
 import { AnswersView } from './AnswersView';
 import { RoundSummaryView } from './RoundSummaryView';
 import { ResultsView } from './ResultsView';
+import { MusicControls } from './MusicControls';
 
 /**
  * Панель ведущего: единственное место, где вносятся баллы и управляется ход игры.
@@ -52,8 +53,19 @@ export function HostApp() {
     setRecoveryBusy(false);
   }, [run]);
 
+  const musicCount = state?.pack.music?.length ?? 0;
+  const hasMusic = musicCount > 0;
+
+  // Панель музыки нужна на каждом экране, поэтому оборачиваем разметку экрана.
+  const withMusic = (node: ReactNode): ReactElement => (
+    <>
+      {node}
+      <MusicControls hasMusic={hasMusic} musicCount={musicCount} />
+    </>
+  );
+
   if (!state) {
-    return (
+    return withMusic(
       <div className="host-root host-root--empty">
         {recovery ? (
           <RecoveryBanner
@@ -90,7 +102,7 @@ export function HostApp() {
   }
 
   if (state.phase === 'lobby') {
-    return (
+    return withMusic(
       <LobbyView
         state={state}
         screen={screen}
@@ -103,24 +115,24 @@ export function HostApp() {
   }
 
   if (state.phase === 'round-intro' || state.phase === 'question' || state.phase === 'round-review') {
-    return <GameView state={state} screen={screen} />;
+    return withMusic(<GameView state={state} screen={screen} />);
   }
 
   if (state.phase === 'round-handin') {
-    return <HandInView state={state} screen={screen} />;
+    return withMusic(<HandInView state={state} screen={screen} />);
   }
 
   if (state.phase === 'round-answers') {
-    return <AnswersView state={state} screen={screen} />;
+    return withMusic(<AnswersView state={state} screen={screen} />);
   }
 
   if (state.phase === 'round-summary') {
-    return <RoundSummaryView state={state} screen={screen} />;
+    return withMusic(<RoundSummaryView state={state} screen={screen} />);
   }
 
   if (state.phase === 'finished') {
-    return <ResultsView state={state} screen={screen} />;
+    return withMusic(<ResultsView state={state} screen={screen} />);
   }
 
-  return null;
+  return withMusic(null);
 }

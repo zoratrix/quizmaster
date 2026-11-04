@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DemoPackInfo } from '../../../shared/api';
-import type { MediaKind, Question, QuizPack } from '../../../shared/types';
+import type { MediaAsset, MediaKind, Question, QuizPack } from '../../../shared/types';
 import {
   collectMedia,
   createEmptyPack,
   createQuestion,
   createRound,
-  newId
+  newId,
+  normalizePack
 } from '../../../shared/factory';
-import { formatDateTime } from '../../../shared/format';
+import { formatBytes, formatDateTime } from '../../../shared/format';
 import { PACK_THEMES, THEME_GROUPS, themesOfGroup } from '../../../shared/themes';
 import type { ThemeId } from '../../../shared/types';
 import { Button } from '../components/Button';
@@ -74,7 +75,8 @@ export function EditorApp() {
         const draft = await window.qm.pack.draftLoad();
         if (!alive) return;
         if (draft) {
-          setPack(draft.pack);
+          // Черновик мог быть сохранён в старой версии — добавляем новые поля пака.
+          setPack(normalizePack(draft.pack));
           setPackPath(draft.path);
           setDraftLoadedAt(draft.savedAt);
         } else {
@@ -192,6 +194,29 @@ export function EditorApp() {
         setQuestionIndex(0);
         toast.success('Раунд удалён');
       }
+    });
+  }
+
+  async function pickRoundCover(): Promise<void> {
+    const index = roundIndex;
+    try {
+      const asset = await window.qm.pack.addMedia('image');
+      if (!asset) return;
+      mutatePack((draft) => {
+        const round = draft.rounds[index];
+        if (round) round.cover = asset;
+      });
+      toast.success('Обложка раунда добавлена');
+    } catch (error) {
+      toast.error(`Не удалось добавить обложку: ${errorText(error)}`);
+    }
+  }
+
+  function clearRoundCover(): void {
+    const index = roundIndex;
+    mutatePack((draft) => {
+      const round = draft.rounds[index];
+      if (round) round.cover = null;
     });
   }
 
@@ -518,6 +543,8 @@ export function EditorApp() {
                 if (round) round.title = title;
               })
             }
+            onPickRoundCover={() => void pickRoundCover()}
+            onClearRoundCover={clearRoundCover}
             onAddQuestion={addQuestion}
             onDuplicateQuestion={duplicateQuestion}
             onDeleteQuestion={askDeleteQuestion}
@@ -572,6 +599,7 @@ export function EditorApp() {
             draft.title = values.title;
             draft.description = values.description;
             draft.theme = values.theme;
+            draft.music = values.music;
             draft.settings.defaultTimeLimitSec = values.defaultTimeLimitSec;
             draft.settings.defaultPoints = values.defaultPoints;
           });
@@ -673,15 +701,19 @@ interface PackSettingsModalProps {
     theme: ThemeId;
     defaultTimeLimitSec: number;
     defaultPoints: number;
+    music: MediaAsset[];
   }) => void;
 }
 
 function PackSettingsModal({ open, pack, onClose, onApply }: PackSettingsModalProps) {
+  const toast = useToast();
   const [title, setTitle] = useState(pack.title);
   const [description, setDescription] = useState(pack.description);
   const [time, setTime] = useState(String(pack.settings.defaultTimeLimitSec));
   const [points, setPoints] = useState(String(pack.settings.defaultPoints));
   const [theme, setTheme] = useState<ThemeId>(pack.theme);
+  const [music, setMusic] = useState<MediaAsset[]>(pack.music);
+  const [musicBusy, setMusicBusy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -690,7 +722,39 @@ function PackSettingsModal({ open, pack, onClose, onApply }: PackSettingsModalPr
     setTime(String(pack.settings.defaultTimeLimitSec));
     setPoints(String(pack.settings.defaultPoints));
     setTheme(pack.theme);
+    setMusic(pack.music);
+    setMusicBusy(false);
   }, [open, pack]);
+
+  async function addMusicTrack(): Promise<void> {
+    if (musicBusy) return;
+    setMusicBusy(true);
+    try {
+      const asset = await window.qm.pack.addMedia('audio');
+      if (asset) {
+        setMusic((prev) => (prev.some((track) => track.id === asset.id) ? prev : [...prev, asset]));
+      }
+    } catch (error) {
+      toast.error(`Не удалось добавить трек: ${errorText(error)}`);
+    } finally {
+      setMusicBusy(false);
+    }
+  }
+
+  function removeMusicTrack(index: number): void {
+    setMusic((prev) => prev.filter((_, trackIndex) => trackIndex !== index));
+  }
+
+  function moveMusicTrack(index: number, direction: -1 | 1): void {
+    setMusic((prev) => {
+      const target = index + direction;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      const [track] = next.splice(index, 1);
+      next.splice(target, 0, track);
+      return next;
+    });
+  }
 
   const selectedTheme = PACK_THEMES.find((item) => item.id === theme) ?? PACK_THEMES[0];
 
@@ -713,7 +777,8 @@ function PackSettingsModal({ open, pack, onClose, onApply }: PackSettingsModalPr
                 description: description.trim(),
                 theme,
                 defaultTimeLimitSec: clamp(Number(time), 5, 3600, 60),
-                defaultPoints: clamp(Number(points), 0, 1000, 1)
+                defaultPoints: clamp(Number(points), 0, 1000, 1),
+                music
               })
             }
           >
@@ -756,6 +821,70 @@ function PackSettingsModal({ open, pack, onClose, onApply }: PackSettingsModalPr
               onChange={(event) => setPoints(event.target.value)}
             />
           </Field>
+        </div>
+        <div className="music-block">
+          <div className="music-block__head">
+            <div className="grow">
+              <div className="music-block__title">Фоновая музыка (необязательно)</div>
+              <div className="music-block__hint small dim">
+                Играет в лобби, на заставках раундов, при сдаче бланков, между раундами и на итогах.
+                Ведущий может менять громкость и ставить музыку на паузу.
+              </div>
+            </div>
+            <Button size="sm" onClick={() => void addMusicTrack()} disabled={musicBusy}>
+              {musicBusy ? 'Выбор…' : 'Добавить трек'}
+            </Button>
+          </div>
+          {music.length === 0 ? (
+            <div className="music-empty">Плейлист пуст — игра пройдёт без фоновой музыки</div>
+          ) : (
+            <div className="music-list">
+              {music.map((track, index) => (
+                <div className="music-item" key={track.id}>
+                  <span className="music-item__icon" aria-hidden="true">
+                    ♪
+                  </span>
+                  <div className="grow">
+                    <div className="music-item__name truncate" title={track.fileName}>
+                      {track.fileName}
+                    </div>
+                    <div className="music-item__meta small dim">
+                      {formatBytes(track.size)}
+                      {music.length > 1 ? ` · ${index + 1} из ${music.length}` : ''}
+                    </div>
+                  </div>
+                  <div className="music-item__actions">
+                    <button
+                      type="button"
+                      className="mini-btn"
+                      title="Выше"
+                      disabled={index === 0}
+                      onClick={() => moveMusicTrack(index, -1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      className="mini-btn"
+                      title="Ниже"
+                      disabled={index === music.length - 1}
+                      onClick={() => moveMusicTrack(index, 1)}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      className="mini-btn mini-btn--danger"
+                      title="Удалить трек"
+                      onClick={() => removeMusicTrack(index)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="theme-picker">
           <div className="theme-picker__head">

@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
+  BackgroundMusicState,
   DemoPackInfo,
   DisplayInfo,
   DraftInfo,
@@ -74,7 +75,10 @@ const api: QuizApi = {
     openHostWindow: () => invoke<void>('game:openHostWindow'),
     openEditorWindow: () => invoke<void>('game:openEditorWindow'),
     focusHost: () => invoke<void>('game:focusHost'),
-    closeGameWindow: () => invoke<void>('game:closeGameWindow')
+    closeGameWindow: () => invoke<void>('game:closeGameWindow'),
+    getMusicState: () => invoke<BackgroundMusicState>('game:getMusicState'),
+    setMusicState: (patch: Partial<BackgroundMusicState>) =>
+      invoke<BackgroundMusicState>('game:setMusicState', patch)
   },
   app: {
     version: () => invoke<string>('app:version'),
@@ -84,7 +88,9 @@ const api: QuizApi = {
   onState: (callback: (state: GameState) => void) => subscribe<GameState>('game:state', callback),
   onTick: (callback: (payload: TickPayload) => void) => subscribe<TickPayload>('game:tick', callback),
   onNotice: (callback: (notice: Notice) => void) => subscribe<Notice>('game:notice', callback),
-  onFullscreen: (callback: (value: boolean) => void) => subscribe<boolean>('window:fullscreen', callback)
+  onFullscreen: (callback: (value: boolean) => void) => subscribe<boolean>('window:fullscreen', callback),
+  onMusicState: (callback: (state: BackgroundMusicState) => void) =>
+    subscribe<BackgroundMusicState>('game:music', callback)
 };
 
 contextBridge.exposeInMainWorld('qm', api);

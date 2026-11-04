@@ -106,15 +106,18 @@ renderer (React) --window.qm.<команда>()--> preload --ipcRenderer.invoke-
 `GameState.phase` — конечный автомат в `GameController`:
 
 ```
-lobby → round-intro → question → round-summary → finished
+lobby → round-intro → question → round-review → round-handin → round-answers → round-summary → finished
 ```
 
 | Фаза | Смысл | Переходы |
 |---|---|---|
 | `lobby` | ввод участников, выбор режима | `game:start` → `round-intro` |
 | `round-intro` | заставка раунда, `questionIndex = -1` | `next` → `question`; `endRound` → `round-summary` |
-| `question` | вопрос и таймер | `next`/`skip` → следующий вопрос или `round-summary`; `prev` → предыдущий вопрос (с первого — `round-intro`) |
-| `round-summary` | ведущий вносит результаты | `nextRound` → `round-intro`; `finish` → `finished` |
+| `question` | вопрос и таймер | `next`/`skip` → следующий вопрос или `round-review`; `prev` → предыдущий вопрос (с первого — `round-intro`) |
+| `round-review` | повторный показ вопросов раунда по 15 секунд | `next` → следующий вопрос обзора или `round-handin`; `prev` → предыдущий вопрос; `endRound` → `round-summary` |
+| `round-handin` | 40 секунд на сдачу бланков | `next` → `round-answers`; `prev` → `round-review`; `endRound` → `round-summary` |
+| `round-answers` | показ правильных ответов на все вопросы раунда | `next`/`endRound` → `round-summary` |
+| `round-summary` | ведущий вносит результаты | `nextRound` → `round-intro` (после последнего раунда — `finished`); `finish` → `finished` |
 | `finished` | итоги, сохранение игры удаляется | `abandon` → состояние очищается |
 
 Ключевые правила:
@@ -143,10 +146,10 @@ media/<assetId>.<ext>
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "createdAt": "2026-01-01T00:00:00.000Z",
   "pack": {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": "pack_…",
     "title": "Название квиза",
     "description": "",
@@ -157,15 +160,18 @@ media/<assetId>.<ext>
       "defaultPoints": 1,
       "partialCreditRatio": 0.5
     },
+    "music": [],
     "rounds": [
       {
         "id": "r_…",
         "title": "Раунд 1",
+        "cover": null,
         "questions": [
           {
             "id": "q_…",
             "text": "Текст вопроса",
             "answer": "Правильный ответ",
+            "answerImage": null,
             "explanation": "",
             "timeLimitSec": 60,
             "points": 1,
@@ -193,8 +199,12 @@ media/<assetId>.<ext>
 
 Правила формата:
 
-- `SCHEMA_VERSION = 1` (`shared/types.ts`). Менять структуру пака можно только вместе
+- `SCHEMA_VERSION = 2` (`shared/types.ts`). Менять структуру пака можно только вместе
   с обновлением `SCHEMA_VERSION` и `normalizePack`, чтобы старые паки открывались.
+- Новые поля с 1.3.0 необязательные: `pack.music` (плейлист), `round.cover` (обложка раунда),
+  `question.answerImage` (картинка к правильному ответу). У паков `schemaVersion: 1`
+  `normalizePack` заполняет их пустыми значениями (`[]`, `null`), поэтому старые паки
+  открываются без замечаний.
 - Медиа внутри архива лежит по пути `media/<assetId><расширение>`; расширение определяется
   по имени файла или MIME (`pack.ts`, `extensionFor`).
 - Для каждого медиафайла считается SHA-256. При открытии пака контрольная сумма каждого файла
@@ -234,6 +244,14 @@ media/<assetId>.<ext>
   `supportFetchAPI`, `corsEnabled`).
 - При открытии пака его медиа распаковывается в библиотеку и регистрируется, поэтому пак
   можно открыть на другом компьютере — медиа приедет внутри архива.
+- `collectMedia` собирает все медиа пака, включая `pack.music`, `round.cover` и
+  `question.answerImage`: они встраиваются в `.quizpack` и проверяются по SHA-256 так же,
+  как медиа вопросов.
+- Фоновая музыка пака — обычные медиа-ассеты: игровое окно проигрывает их по кругу в паузах
+  игры (лобби, заставки раундов, сдача бланков, итоги раунда, финал), а во время вопросов
+  музыка молчит. Громкость, пауза и mute хранятся в main (`ipc.ts`, `game:getMusicState` /
+  `setMusicState`, событие `game:music`). Встроенный звук фанфар — статический ассет рендерера
+  `src/renderer/src/assets/fanfare.mp3`, в пак он не входит.
 
 ## 9. Автосохранение и восстановление
 
@@ -265,7 +283,7 @@ media/<assetId>.<ext>
 |---|---|---|
 | сборка main/preload | `scripts/build-app.mjs` (esbuild) | `dist/main/index.js`, `dist/preload/index.js` |
 | сборка рендерера | `scripts/build-app.mjs` (Vite, `vite.config.ts`) | `dist/renderer/**` |
-| упаковка установщика | `electron-builder --win nsis` (`electron-builder.yml`) | `release\QuizMaster-1.2.0-Setup.exe` |
+| упаковка установщика | `electron-builder --win nsis` (`electron-builder.yml`) | `release\QuizMaster-1.3.0-Setup.exe` |
 
 `electron-builder.yml`:
 

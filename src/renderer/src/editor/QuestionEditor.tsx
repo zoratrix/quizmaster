@@ -130,18 +130,28 @@ export function QuestionEditor({
         </section>
 
         <section className="card question-editor__section">
-          <Field
-            label="Правильный ответ"
-            hint="Виден только ведущему в панели управления, на игровом экране появляется после показа ответа"
-          >
-            <textarea
-              className="textarea"
-              rows={2}
-              value={question.answer}
-              placeholder="Краткий эталонный ответ"
-              onChange={(event) => onUpdate((draft) => (draft.answer = event.target.value))}
+          <div className="col gap-12">
+            <Field
+              label="Правильный ответ"
+              hint="Виден только ведущему в панели управления, на игровом экране появляется после показа ответа"
+            >
+              <textarea
+                className="textarea"
+                rows={2}
+                value={question.answer}
+                placeholder="Краткий эталонный ответ"
+                onChange={(event) => onUpdate((draft) => (draft.answer = event.target.value))}
+              />
+            </Field>
+            <MediaField
+              kind="image"
+              asset={question.answerImage}
+              onChange={(asset) => onUpdate((draft) => (draft.answerImage = asset))}
+              title="Картинка к ответу (необязательно)"
+              hint="Постер или кадр — показывается вместе с ответом на игровом экране"
+              addLabel="Добавить картинку к ответу"
             />
-          </Field>
+          </div>
         </section>
 
         <section className="card question-editor__section">
