@@ -4,14 +4,30 @@ import type { GameState } from '../../../shared/types';
 import { mediaUrl } from '../lib/media';
 import fanfareUrl from '../assets/fanfare.mp3';
 
-/** Фазы, в которых играет фоновая музыка пака (в вопросах — тишина, чтобы не мешать аудио вопроса). */
-const MUSIC_PHASES: ReadonlySet<GameState['phase']> = new Set<GameState['phase']>([
+/** Фазы, где музыка играет на обычной громкости. */
+const BASE_MUSIC_PHASES: ReadonlySet<GameState['phase']> = new Set<GameState['phase']>([
   'lobby',
   'round-intro',
   'round-handin',
   'round-summary',
   'finished'
 ]);
+
+/** Фазы вопросов/ответов: музыка играет тихо (5% от обычной громкости 25%), если нет своего аудио/видео. */
+const QUIET_MUSIC_PHASES: ReadonlySet<GameState['phase']> = new Set<GameState['phase']>([
+  'question',
+  'round-review',
+  'round-answers'
+]);
+
+function hasOwnAudio(state: GameState | null): boolean {
+  if (!state) return false;
+  const round = state.pack.rounds[state.roundIndex];
+  const question = round?.questions[state.questionIndex];
+  if (!question) return false;
+  const media = state.phase === 'round-answers' ? question.answerMedia : question.media;
+  return Boolean(media?.audio || media?.video);
+}
 
 const DEFAULT_STATE: BackgroundMusicState = { volume: 0.25, muted: false, paused: false };
 
@@ -21,6 +37,8 @@ const DEFAULT_STATE: BackgroundMusicState = { volume: 0.25, muted: false, paused
  * Плеер живёт в игровом окне (там же, где играет аудио вопросов), громкость и
  * пауза приходят из main-процесса — их меняет ведущий в панели управления.
  * Плейлист идёт по кругу; фанфары играют один раз при первом показе итогов.
+ * На вопросах и ответах музыка играет только если у самого вопроса/ответа нет
+ * аудио или видео, и приглушается до 5% (при стандартной громкости 25%).
  */
 export function BackgroundMusic({ state }: { state: GameState | null }) {
   const [settings, setSettings] = useState<BackgroundMusicState>(DEFAULT_STATE);
@@ -31,7 +49,13 @@ export function BackgroundMusic({ state }: { state: GameState | null }) {
   const lastPhase = useRef<GameState['phase'] | null>(null);
 
   const tracks = state?.pack.music ?? [];
-  const active = Boolean(state && MUSIC_PHASES.has(state.phase)) && tracks.length > 0;
+  const quiet = Boolean(state && QUIET_MUSIC_PHASES.has(state.phase));
+  const ownAudio = hasOwnAudio(state);
+  const active =
+    Boolean(state) &&
+    tracks.length > 0 &&
+    (BASE_MUSIC_PHASES.has(state!.phase) || (quiet && !ownAudio));
+  const volumeScale = quiet ? 0.2 : 1;
   const track = tracks.length > 0 ? tracks[trackIndex % tracks.length] : null;
   const src = track ? mediaUrl(track.id) : '';
 
@@ -63,13 +87,13 @@ export function BackgroundMusic({ state }: { state: GameState | null }) {
     const audio = musicRef.current;
     if (!audio) return;
     const duck = fanfarePlaying ? 0.25 : 1;
-    audio.volume = Math.max(0, Math.min(1, (settings.muted ? 0 : settings.volume) * duck));
-    if (!active || settings.paused) {
+    audio.volume = Math.max(0, Math.min(1, (settings.muted ? 0 : settings.volume) * volumeScale * duck));
+    if (!active || settings.paused || state?.paused) {
       audio.pause();
       return;
     }
     void audio.play().catch(() => undefined);
-  }, [active, src, settings, fanfarePlaying]);
+  }, [active, src, settings, fanfarePlaying, volumeScale, state?.paused]);
 
   // Несколько треков — по очереди; один трек повторяется через loop.
   const handleTrackEnded = (): void => {

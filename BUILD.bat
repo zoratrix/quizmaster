@@ -70,8 +70,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\make-portable.
 echo.
 echo ============================================
 echo   Готово!
-echo   Установщик:        release\QuizMaster-1.3.1-Setup.exe
-echo   Портативная версия: release\QuizMaster-1.3.1-portable.zip
+echo   Установщик:        release\QuizMaster-1.3.2-Setup.exe
+echo   Портативная версия: release\QuizMaster-1.3.2-portable.zip
 echo ============================================
 echo.
 if exist "release" start "" "%~dp0release"

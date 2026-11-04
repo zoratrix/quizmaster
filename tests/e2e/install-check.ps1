@@ -8,7 +8,7 @@ Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$installer = Join-Path $root 'release\QuizMaster-1.3.1-Setup.exe'
+$installer = Join-Path $root 'release\QuizMaster-1.3.2-Setup.exe'
 $artifacts = Join-Path $root 'tests\e2e\artifacts'
 $target = Join-Path $env:LOCALAPPDATA 'Programs\QuizMaster'
 $exe = Join-Path $target 'QuizMaster.exe'

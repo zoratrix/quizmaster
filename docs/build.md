@@ -122,10 +122,10 @@ npm run dist
 - `files`: `dist/main`, `dist/preload`, `dist/renderer`, `package.json`;
 - `asar: true`;
 - `extraResources`: `packs` → `resources/packs` (демо-паки внутри установленной версии);
-- `artifactName: QuizMaster-${version}-Setup.${ext}` → `release\QuizMaster-1.3.1-Setup.exe`;
+- `artifactName: QuizMaster-${version}-Setup.${ext}` → `release\QuizMaster-1.3.2-Setup.exe`;
 - установка для текущего пользователя без вопросов (oneClick), ярлыки, языки ru/en,
   без цифровой подписи (SmartScreen может предупредить);
-- рядом создаётся `release\QuizMaster-1.3.1-portable.zip` (`scripts/make-portable.ps1`) —
+- рядом создаётся `release\QuizMaster-1.3.2-portable.zip` (`scripts/make-portable.ps1`) —
   версия без установки, на случай если установщик блокируется;
 - данные в `%APPDATA%\quizmaster` при удалении не удаляются.
 
@@ -238,7 +238,7 @@ npm run e2e
 2. `npm test` — все юнит-тесты проходят.
 3. `npm run build` — собирается.
 4. `npm run e2e` — «ВСЁ ОК» по всем трём сценариям, скриншоты просмотрены.
-5. `BUILD.bat` — созданы `release\QuizMaster-1.3.1-Setup.exe` и `release\QuizMaster-1.3.1-portable.zip`.
+5. `BUILD.bat` — созданы `release\QuizMaster-1.3.2-Setup.exe` и `release\QuizMaster-1.3.2-portable.zip`.
 6. `node tests/e2e/packaged.mjs` — «ВСЁ ОК» (собранная версия запускается).
 7. Установщик проверен на обычной машине: приложение ставится, редактор открывается, демо-пак запускается.
 7. `CONTEXT.md` и `CHANGELOG.md` обновлены; `TODO.md` отражает оставшиеся задачи.

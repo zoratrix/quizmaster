@@ -254,12 +254,21 @@ media/<assetId>.<ext>
   и проверяются по SHA-256 так же, как медиа вопросов.
 - Медиа ответа выводится на экране ответов (`game/RoundAnswersView.tsx` через `MediaStage`):
   видео приоритетнее картинки, аудио играет отдельным плеером.
-- Фоновая музыка пака — обычные медиа-ассеты: игровое окно проигрывает их по кругу в паузах
-  игры (лобби, заставки раундов, сдача бланков, итоги раунда, финал), а во время вопросов
-  музыка молчит. При запуске пака громкость сбрасывается на 25%; громкость, пауза и mute
-  хранятся в main (`ipc.ts`, `game:getMusicState` / `setMusicState`, событие `game:music`).
-  Встроенный звук фанфар — статический ассет рендерера `src/renderer/src/assets/fanfare.mp3`,
-  в пак он не входит.
+- Вёрстка экрана: шапки `game-topbar` и `game-answers__head` вынесены из потока
+  (`position: absolute`), поэтому текст вопроса и ответ без картинки центрируются по высоте.
+  Картинка ответа вписывается целиком (`object-fit: contain`, ограничение по высоте), а с
+  визуальным медиа текст начинается под шапкой (`.game-answer-single--visual`). Вопрос
+  с медиа (`.game-screen--media`) также получает верхний отступ под шапку, чтобы текст
+  не накладывался на номер вопроса, баллы и таймер.
+- Фоновая музыка пака — обычные медиа-ассеты. `BackgroundMusic.tsx` делит фазы на базовые
+  (`lobby`, `round-intro`, `round-handin`, `round-summary`, `finished`) и тихие
+  (`question`, `round-review`, `round-answers`): в тихих громкость умножается на `0.2`
+  (5% при стандартной 25%) и музыка звучит только при `hasOwnAudio() === false` — если
+  у текущего вопроса/ответа нет своего аудио или видео. `state.paused` и `settings.paused`
+  останавливают плеер. При запуске пака громкость сбрасывается на 25%; громкость, пауза
+  и mute хранятся в main (`ipc.ts`, `game:getMusicState` / `setMusicState`, событие
+  `game:music`). Встроенный звук фанфар — статический ассет рендерера
+  `src/renderer/src/assets/fanfare.mp3`, в пак он не входит.
 
 ## 9. Автосохранение и восстановление
 
@@ -291,7 +300,7 @@ media/<assetId>.<ext>
 |---|---|---|
 | сборка main/preload | `scripts/build-app.mjs` (esbuild) | `dist/main/index.js`, `dist/preload/index.js` |
 | сборка рендерера | `scripts/build-app.mjs` (Vite, `vite.config.ts`) | `dist/renderer/**` |
-| упаковка установщика | `electron-builder --win nsis` (`electron-builder.yml`) | `release\QuizMaster-1.3.1-Setup.exe` |
+| упаковка установщика | `electron-builder --win nsis` (`electron-builder.yml`) | `release\QuizMaster-1.3.2-Setup.exe` |
 
 `electron-builder.yml`:
 

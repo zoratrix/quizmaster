@@ -30,6 +30,7 @@ export function RoundAnswersView({ state, remainingMs }: { state: GameState; rem
   const roundNumber = state.roundIndex + 1;
   const roundTitle = round?.title.trim() || `Раунд ${roundNumber}`;
   const ended = remainingMs <= 0;
+  const hasVisual = Boolean(question?.answerMedia.image || question?.answerMedia.video);
 
   return (
     <section className="game-screen game-screen--round-answers" aria-label="Правильные ответы раунда">
@@ -57,7 +58,7 @@ export function RoundAnswersView({ state, remainingMs }: { state: GameState; rem
       {!question ? (
         <div className="game-answers__empty">В этом раунде нет вопросов</div>
       ) : (
-        <div className="game-answer-single" key={question.id}>
+        <div className={`game-answer-single${hasVisual ? ' game-answer-single--visual' : ''}`} key={question.id}>
           <div className="game-answer-single__question">{question.text.trim() || 'Вопрос без текста'}</div>
           <div className="game-answer-single__answer">
             <span className="game-answer-single__label">Ответ</span>

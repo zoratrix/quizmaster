@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Countdown } from '../components/Countdown';
 import type { GameState } from '../../../shared/types';
-import { plural } from '../../../shared/stats';
 
 /** Крупный обратный отсчёт: основной элемент экрана сдачи бланков. */
 function computeHandInTimerSize(): number {
@@ -27,13 +26,8 @@ export function RoundHandInView({ state, remainingMs }: { state: GameState; rema
   const roundNumber = state.roundIndex + 1;
   const totalRounds = state.pack.rounds.length;
   const roundTitle = round?.title.trim() || `Раунд ${roundNumber}`;
-  const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
   const ended = remainingMs <= 0;
-  const caption = state.paused
-    ? 'Пауза'
-    : ended
-      ? 'Время вышло'
-      : `Осталось ${seconds} ${plural(seconds, 'секунда', 'секунды', 'секунд')}`;
+  const caption = state.paused ? 'Пауза' : ended ? 'Время вышло' : null;
 
   return (
     <section className="game-screen game-screen--handin" aria-label="Сдача бланков">
@@ -61,7 +55,7 @@ export function RoundHandInView({ state, remainingMs }: { state: GameState; rema
           />
         </div>
 
-        <p className="game-handin__caption">{caption}</p>
+        {caption ? <p className="game-handin__caption">{caption}</p> : null}
       </div>
     </section>
   );

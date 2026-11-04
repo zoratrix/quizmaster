@@ -41,7 +41,12 @@ export function RoundReviewView({ state, round, question, remainingMs }: RoundRe
 
   return (
     <section
-      className={cx('game-screen', 'game-screen--question', 'game-screen--review')}
+      className={cx(
+        'game-screen',
+        'game-screen--question',
+        'game-screen--review',
+        hasMedia && 'game-screen--media'
+      )}
       aria-label={`Проверка ответов: вопрос ${number} из ${total}`}
     >
       <header className="game-topbar">
