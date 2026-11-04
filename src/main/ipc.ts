@@ -31,8 +31,8 @@ import {
 
 const PACK_FILTER = [{ name: 'Игровой пак QuizMaster', extensions: ['quizpack'] }];
 
-/** Громкость фоновой музыки общая для окон; 0.35 — комфортный уровень по умолчанию. */
-const DEFAULT_MUSIC_STATE: BackgroundMusicState = { volume: 0.35, muted: false, paused: false };
+/** Громкость фоновой музыки общая для окон; при запуске пака — 25%. */
+const DEFAULT_MUSIC_STATE: BackgroundMusicState = { volume: 0.25, muted: false, paused: false };
 let musicState: BackgroundMusicState = { ...DEFAULT_MUSIC_STATE };
 
 function clampVolume(value: number): number {
@@ -149,7 +149,8 @@ export function registerIpc(controller: GameController): void {
 
   ipcMain.handle('pack:prepareGame', async (_event, payload: { pack: QuizPack; packPath: string | null }) => {
     controller.prepare(payload.pack, payload.packPath);
-    updateMusicState({ paused: false });
+    // Каждый запуск пака начинается с тихой фоновой музыки (25%), ведущий может изменить.
+    updateMusicState({ ...DEFAULT_MUSIC_STATE });
     createHostWindow();
     createGameWindow();
   });

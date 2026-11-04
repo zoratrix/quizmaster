@@ -1,4 +1,5 @@
 import {
+  DEFAULT_ANSWER_REVEAL_SEC,
   DEFAULT_POINTS,
   DEFAULT_TIME_LIMIT_SEC,
   PARTIAL_CREDIT_RATIO,
@@ -28,7 +29,7 @@ export function createQuestion(settings?: QuizPack['settings']): Question {
     id: newId('q'),
     text: '',
     answer: '',
-    answerImage: null,
+    answerMedia: emptyMedia(),
     explanation: '',
     timeLimitSec: settings?.defaultTimeLimitSec ?? DEFAULT_TIME_LIMIT_SEC,
     points: settings?.defaultPoints ?? DEFAULT_POINTS,
@@ -50,7 +51,8 @@ export function createEmptyPack(): QuizPack {
   const settings = {
     defaultTimeLimitSec: DEFAULT_TIME_LIMIT_SEC,
     defaultPoints: DEFAULT_POINTS,
-    partialCreditRatio: PARTIAL_CREDIT_RATIO
+    partialCreditRatio: PARTIAL_CREDIT_RATIO,
+    answerRevealSec: DEFAULT_ANSWER_REVEAL_SEC
   };
   return {
     schemaVersion: SCHEMA_VERSION,
@@ -79,7 +81,8 @@ export function normalizePack(raw: any): QuizPack {
     settings: {
       defaultTimeLimitSec: num(raw?.settings?.defaultTimeLimitSec, DEFAULT_TIME_LIMIT_SEC),
       defaultPoints: num(raw?.settings?.defaultPoints, DEFAULT_POINTS),
-      partialCreditRatio: num(raw?.settings?.partialCreditRatio, PARTIAL_CREDIT_RATIO)
+      partialCreditRatio: num(raw?.settings?.partialCreditRatio, PARTIAL_CREDIT_RATIO),
+      answerRevealSec: Math.max(1, Math.round(num(raw?.settings?.answerRevealSec, DEFAULT_ANSWER_REVEAL_SEC)))
     },
     music: Array.isArray(raw?.music)
       ? raw.music.map((asset: unknown) => normalizeAsset(asset, 'audio')).filter((asset: MediaAssetLike | null) => Boolean(asset))
@@ -105,7 +108,7 @@ function normalizeQuestion(raw: any): Question {
     id: typeof raw?.id === 'string' && raw.id ? raw.id : newId('q'),
     text: typeof raw?.text === 'string' ? raw.text : '',
     answer: typeof raw?.answer === 'string' ? raw.answer : '',
-    answerImage: normalizeAsset(raw?.answerImage, 'image'),
+    answerMedia: normalizeAnswerMedia(raw),
     explanation: typeof raw?.explanation === 'string' ? raw.explanation : '',
     timeLimitSec: Math.max(1, num(raw?.timeLimitSec, DEFAULT_TIME_LIMIT_SEC)),
     points: Math.max(0, num(raw?.points, DEFAULT_POINTS)),
@@ -126,6 +129,23 @@ function normalizeAsset(raw: any, kind: MediaKindLike) {
     mimeType: typeof raw.mimeType === 'string' ? raw.mimeType : 'application/octet-stream',
     size: num(raw.size, 0),
     sha256: typeof raw.sha256 === 'string' ? raw.sha256 : ''
+  };
+}
+
+/** Медиа ответа: в 1.3.0 была только картинка (answerImage), теперь — полный набор. */
+function normalizeAnswerMedia(raw: any): QuestionMedia {
+  const media = raw?.answerMedia;
+  if (media && typeof media === 'object') {
+    return {
+      image: normalizeAsset(media.image, 'image'),
+      audio: normalizeAsset(media.audio, 'audio'),
+      video: normalizeAsset(media.video, 'video')
+    };
+  }
+  return {
+    image: normalizeAsset(raw?.answerImage, 'image'),
+    audio: null,
+    video: null
   };
 }
 
@@ -173,7 +193,9 @@ export function collectMedia(pack: QuizPack): MediaAssetLike[] {
   for (const round of pack.rounds) {
     add(round.cover);
     for (const q of round.questions) {
-      add(q.answerImage);
+      add(q.answerMedia.image);
+      add(q.answerMedia.audio);
+      add(q.answerMedia.video);
       for (const asset of [q.media.image, q.media.audio, q.media.video]) add(asset);
     }
   }

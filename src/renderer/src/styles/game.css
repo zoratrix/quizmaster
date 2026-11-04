@@ -2169,6 +2169,96 @@
   font-weight: 600;
 }
 
+.game-screen--round-answers {
+  position: relative;
+}
+
+/* Таймер показа текущего ответа */
+.game-answers__timer {
+  position: absolute;
+  top: clamp(14px, 2.2vh, 34px);
+  right: clamp(20px, 3.2vw, 64px);
+  z-index: 2;
+}
+
+/* Один ответ: текст вопроса, крупный ответ и медиа к нему */
+.game-answer-single {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.5vh, 20px);
+  padding: clamp(2px, 1vh, 10px) 0;
+}
+
+.game-answer-single__question {
+  max-width: min(1200px, 92%);
+  color: var(--text-muted);
+  font-size: clamp(17px, 1.55vw, 27px);
+  line-height: 1.35;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.game-answer-single__answer {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.55em;
+  max-width: 94%;
+  text-align: center;
+}
+
+.game-answer-single__label {
+  flex: 0 0 auto;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  font-size: clamp(12px, 1.1vw, 18px);
+  font-weight: 650;
+}
+
+.game-answer-single__value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(38px, 5.2vw, 92px);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  background: var(--g-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  overflow-wrap: anywhere;
+  filter: drop-shadow(0 20px 60px rgba(var(--g-accent-rgb), 0.28));
+}
+
+.game-answer-single__explanation {
+  max-width: min(1100px, 90%);
+  color: var(--text-dim);
+  font-size: clamp(13px, 1.15vw, 20px);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.game-answer-single .game-media {
+  width: min(100%, 1500px);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Аудио к ответу — на отдельной панели, чтобы плеер не терялся на фоне */
+.game-answer-single .game-media--audio-only {
+  flex: 0 0 auto;
+  width: min(100%, 1100px);
+  padding: clamp(8px, 1.2vh, 16px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--g-panel-line);
+  background: var(--g-panel);
+}
+
 .game-answers__empty {
   flex: 1;
   display: grid;

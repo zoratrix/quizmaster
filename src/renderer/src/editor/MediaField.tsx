@@ -15,6 +15,8 @@ export interface MediaFieldProps {
   hint?: string;
   /** Текст пустого состояния вместо «Добавить …». */
   addLabel?: string;
+  /** Компактный вид: без большой зоны «перетащите файл», меньше отступы и превью. */
+  compact?: boolean;
 }
 
 const LABELS: Record<MediaKind, { title: string; add: string; hint: string; icon: string }> = {
@@ -42,7 +44,7 @@ function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function MediaField({ kind, asset, onChange, title, hint, addLabel }: MediaFieldProps) {
+export function MediaField({ kind, asset, onChange, title, hint, addLabel, compact }: MediaFieldProps) {
   const [busy, setBusy] = useState(false);
   const toast = useToast();
   const label = LABELS[kind];
@@ -64,7 +66,7 @@ export function MediaField({ kind, asset, onChange, title, hint, addLabel }: Med
   }
 
   return (
-    <div className={`media-field media-field--${kind}`}>
+    <div className={`media-field media-field--${kind}${compact ? ' media-field--compact' : ''}`}>
       <div className="media-field__head">
         <span className="media-field__icon" aria-hidden>
           {label.icon}
@@ -77,12 +79,31 @@ export function MediaField({ kind, asset, onChange, title, hint, addLabel }: Med
         </div>
         {asset ? (
           <div className="row gap-6">
-            <Button size="sm" variant="ghost" onClick={pick} disabled={busy}>
-              Заменить
-            </Button>
-            <Button size="sm" variant="danger" onClick={() => onChange(null)}>
-              Удалить
-            </Button>
+            {compact ? (
+              <>
+                <Button size="sm" variant="ghost" onClick={pick} disabled={busy} title="Заменить" aria-label="Заменить">
+                  ↻
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => onChange(null)}
+                  title="Удалить"
+                  aria-label="Удалить"
+                >
+                  ✕
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button size="sm" variant="ghost" onClick={pick} disabled={busy}>
+                  Заменить
+                </Button>
+                <Button size="sm" variant="danger" onClick={() => onChange(null)}>
+                  Удалить
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           <Button size="sm" onClick={pick} disabled={busy}>
@@ -99,7 +120,7 @@ export function MediaField({ kind, asset, onChange, title, hint, addLabel }: Med
           {kind === 'audio' ? <AudioPlayer src={mediaUrl(asset.id)} /> : null}
           {kind === 'video' ? <VideoPlayer src={mediaUrl(asset.id)} /> : null}
         </div>
-      ) : (
+      ) : compact ? null : (
         <button type="button" className="media-field__empty" onClick={pick} disabled={busy}>
           <span className="media-field__empty-icon">{label.icon}</span>
           <span>{busy ? 'Открываем файл…' : emptyLabel}</span>

@@ -37,7 +37,7 @@ window.qm.onState(cb) / onTick(cb) / onNotice(cb) // подписки, возв�
 
 Фазы игры (`state.phase`): `lobby` (ввод команд) → `round-intro` (заставка раунда) →
 `question` (вопрос + таймер, все вопросы раунда) → `round-review` (повторный показ вопросов по 15 с) →
-`round-handin` (40 с на сдачу бланков) → `round-answers` (правильные ответы на все вопросы раунда) →
+`round-handin` (40 с на сдачу бланков) → `round-answers` (правильные ответы по одному с таймером) →
 `round-summary` (ведущий вносит результаты) → `finished` (итоги).
 
 Текущий вопрос: `state.pack.rounds[state.roundIndex].questions[state.questionIndex]`
@@ -53,18 +53,27 @@ window.qm.onState(cb) / onTick(cb) / onNotice(cb) // подписки, возв�
 там же живой предпросмотр игрового экрана на реальных стилях игры. Редактор и панель ведущего
 тему не применяют; старые паки нормализуются в «Студию» (`normalizeTheme`).
 
-Медиа пака (с 1.3.0): необязательные `pack.music` (`MediaAsset[]`), `round.cover` и
-`question.answerImage` (`MediaAsset | null`); отдаются через `mediaUrl`. Формат `.quizpack` —
-`SCHEMA_VERSION = 2` (`src/shared/types.ts`): паки `schemaVersion: 1` открываются, новые поля
-заполняются пустыми значениями в `normalizePack`; медиа встраивается в архив и проверяется
-по SHA-256, как раньше. Обложка раунда выводится на заставке (`game/RoundIntroView.tsx`),
-картинка ответа — на экране правильных ответов (`game/RoundAnswersView.tsx`,
-`host/AnswersView.tsx`).
+Медиа пака: необязательные `pack.music` (`MediaAsset[]`), `round.cover` и
+`question.answerMedia` (`QuestionMedia`: image/audio/video); отдаются через `mediaUrl`.
+Формат `.quizpack` — `SCHEMA_VERSION = 2` (`src/shared/types.ts`): паки `schemaVersion: 1`
+открываются, новые поля заполняются пустыми значениями в `normalizePack`; старое поле
+картинки ответа мигрирует в `answerMedia.image`. Медиа встраивается в архив и проверяется
+по SHA-256. Обложка раунда выводится на заставке (`game/RoundIntroView.tsx`), медиа ответа —
+на экране ответов (`game/RoundAnswersView.tsx` через `MediaStage`, `host/AnswersView.tsx`).
 
-Фоновая музыка (с 1.3.0): плеер живёт в игровом окне (`game/BackgroundMusic.tsx`) и звучит
-только в фазах `lobby`, `round-intro`, `round-handin`, `round-summary`, `finished`; в вопросах
+Показ ответов (фаза `round-answers`): `state.questionIndex` — индекс показываемого ответа,
+таймер — `settings.answerRevealSec` секунд на ответ (по умолчанию 15; редактор ограничивает
+3–300, в `GameController` — `answerRevealDurationMs`). `window.qm.game.next()` ускоряет переход,
+по истечении таймера main переключает сам; после последнего ответа — `round-summary`.
+`pause`/`togglePause` останавливают таймер и медиа ответа, `prev()` возвращает предыдущий ответ.
+В панели ведущего (`host/AnswersView.tsx`) — те же данные: таймер в шапке, кнопка
+«Следующий ответ →» (`next`), «Пауза/Продолжить», превью картинки и подписи аудио/видео ответа.
+
+Фоновая музыка: плеер живёт в игровом окне (`game/BackgroundMusic.tsx`) и звучит только
+в фазах `lobby`, `round-intro`, `round-handin`, `round-summary`, `finished`; в вопросах
 и при показе ответов молчит. Один трек играет с `loop`, несколько — по кругу по порядку.
-Настройки общие для окон, источник истины — main:
+При запуске пака громкость сбрасывается на 25% (`pack:prepareGame`); настройки общие для окон,
+источник истины — main:
 
 ```ts
 interface BackgroundMusicState { volume: number; muted: boolean; paused: boolean }

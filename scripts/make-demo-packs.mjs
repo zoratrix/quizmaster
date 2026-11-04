@@ -196,7 +196,7 @@ function question(id, text, answer, explanation = '', points = 1, timeLimitSec =
     id,
     text,
     answer,
-    answerImage: null,
+    answerMedia: { image: null, audio: null, video: null },
     explanation,
     timeLimitSec,
     points,
@@ -218,7 +218,7 @@ function buildPack({ id, title, description, rounds, theme = 'default' }) {
     description,
     createdAt: now,
     updatedAt: now,
-    settings: { defaultTimeLimitSec: 60, defaultPoints: 1, partialCreditRatio: 0.5 },
+    settings: { defaultTimeLimitSec: 60, defaultPoints: 1, partialCreditRatio: 0.5, answerRevealSec: 15 },
     music: [],
     rounds: rounds.map((round) => ({ cover: null, ...round }))
   };

@@ -405,9 +405,9 @@
 }
 
 .question-editor__media {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
 }
 
 /* ---------- Медиа ---------- */
@@ -495,6 +495,67 @@
 .media-field__empty-icon {
   font-size: 22px;
   opacity: 0.8;
+}
+
+/* Компактные блоки медиа: вопросы и ответы — меньше высоты, меньше прокрутки */
+.media-field--compact {
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.media-field--compact .media-field__head {
+  gap: 8px;
+}
+
+.media-field--compact .media-field__icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  font-size: 13px;
+}
+
+.media-field--compact .media-field__title {
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.media-field--compact .media-field__hint {
+  font-size: 11px;
+  max-width: 100%;
+}
+
+.media-field--compact .media-field__head {
+  flex-wrap: nowrap;
+}
+
+.media-field--compact .media-field__head > .row {
+  flex: 0 0 auto;
+}
+
+.media-field--compact .media-field__body {
+  border-radius: 8px;
+}
+
+.media-field--compact .media-field__image {
+  max-height: 120px;
+}
+
+.media-field--compact .audio-player {
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px;
+}
+
+.media-field--compact .audio-player__play {
+  width: 28px;
+  height: 28px;
+}
+
+.media-field--compact .video-player__video {
+  max-height: 150px;
 }
 
 .audio-player {

@@ -15,7 +15,12 @@ export function TimerDisplay({ state }: TimerDisplayProps) {
   const remaining = useTimerRemaining(state);
   const duration = Math.max(1, state.timer.durationMs);
   const ratio = Math.max(0, Math.min(1, remaining / duration));
-  const ended = (state.phase === 'question' || state.phase === 'round-review' || state.phase === 'round-handin') && remaining <= 0;
+  const ended =
+    (state.phase === 'question' ||
+      state.phase === 'round-review' ||
+      state.phase === 'round-handin' ||
+      state.phase === 'round-answers') &&
+    remaining <= 0;
   const tone = state.paused ? 'paused' : ended || ratio <= 0.12 ? 'bad' : ratio <= 0.4 ? 'mid' : 'ok';
 
   let caption = 'таймер';
@@ -24,6 +29,7 @@ export function TimerDisplay({ state }: TimerDisplayProps) {
   else if (state.phase === 'question') caption = 'осталось';
   else if (state.phase === 'round-review') caption = 'на проверку';
   else if (state.phase === 'round-handin') caption = 'на сдачу бланков';
+  else if (state.phase === 'round-answers') caption = 'показ ответа';
   else if (state.phase === 'round-intro') caption = 'до первого вопроса';
 
   return (

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import type { GameMode, GameState, QuizPack, Team } from '../shared/types';
-import { HAND_IN_SEC, REVIEW_PER_QUESTION_SEC } from '../shared/types';
+import { DEFAULT_ANSWER_REVEAL_SEC, HAND_IN_SEC, REVIEW_PER_QUESTION_SEC } from '../shared/types';
 import type { TickPayload } from '../shared/api';
 import { createTeam, newId, normalizePack } from '../shared/factory';
 import { clampScore, roundScore } from '../shared/scoring';
@@ -18,6 +18,12 @@ export interface ControllerEvents {
 function questionDurationMs(pack: QuizPack, roundIndex: number, questionIndex: number): number {
   const question = pack.rounds[roundIndex]?.questions[questionIndex];
   return Math.max(1, question?.timeLimitSec ?? 60) * 1000;
+}
+
+/** Сколько секунд показывается один правильный ответ (настраивается в паке). */
+function answerRevealDurationMs(pack: QuizPack): number {
+  const seconds = pack.settings?.answerRevealSec ?? DEFAULT_ANSWER_REVEAL_SEC;
+  return Math.max(1, Math.round(seconds)) * 1000;
 }
 
 export class GameController extends EventEmitter {
@@ -153,7 +159,7 @@ export class GameController extends EventEmitter {
       return;
     }
     if (state.phase === 'round-answers') {
-      this.endRound();
+      this.advanceAnswer();
       return;
     }
     if (state.phase === 'round-summary') {
@@ -189,6 +195,10 @@ export class GameController extends EventEmitter {
         state.timer = { durationMs: duration, remainingMs: duration, running: false, endsAt: null };
         this.emitState();
       }
+      return;
+    }
+    if (state.phase === 'round-answers') {
+      if (state.questionIndex > 0) this.openAnswer(state.questionIndex - 1);
       return;
     }
     if (state.phase === 'round-handin') {
@@ -371,12 +381,18 @@ export class GameController extends EventEmitter {
   // ---------- Повторный просмотр, сдача бланков, ответы ----------
 
   private phaseHasTimer(phase: GameState['phase']): boolean {
-    return phase === 'question' || phase === 'round-review' || phase === 'round-handin';
+    return (
+      phase === 'question' ||
+      phase === 'round-review' ||
+      phase === 'round-handin' ||
+      phase === 'round-answers'
+    );
   }
 
   private timerDurationForPhase(state: GameState): number {
     if (state.phase === 'round-review') return REVIEW_PER_QUESTION_SEC * 1000;
     if (state.phase === 'round-handin') return HAND_IN_SEC * 1000;
+    if (state.phase === 'round-answers') return answerRevealDurationMs(state.pack);
     return questionDurationMs(state.pack, state.roundIndex, Math.max(0, state.questionIndex));
   }
 
@@ -425,16 +441,46 @@ export class GameController extends EventEmitter {
     this.emitTick();
   }
 
-  /** Показ правильных ответов на все вопросы раунда. */
+  /** Показ правильных ответов по одному: каждый — свой таймер, затем следующий. */
   private showRoundAnswers(): void {
     const state = this.requireState();
     this.freezeTimer();
-    state.phase = 'round-answers';
-    state.questionIndex = -1;
     state.paused = false;
-    state.timer = { durationMs: 0, remainingMs: 0, running: false, endsAt: null };
+    const round = state.pack.rounds[state.roundIndex];
+    if (!round || round.questions.length === 0) {
+      this.endRound();
+      return;
+    }
+    this.openAnswer(0);
+  }
+
+  private openAnswer(index: number): void {
+    const state = this.requireState();
+    const round = state.pack.rounds[state.roundIndex];
+    if (!round || !round.questions[index]) {
+      this.endRound();
+      return;
+    }
+    state.phase = 'round-answers';
+    state.questionIndex = index;
+    state.revealed = false;
+    const duration = answerRevealDurationMs(state.pack);
+    state.timer = { durationMs: duration, remainingMs: duration, running: false, endsAt: null };
+    if (!state.paused) this.startTimer(duration);
     this.emitState();
     this.emitTick();
+  }
+
+  private advanceAnswer(): void {
+    const state = this.requireState();
+    if (state.phase !== 'round-answers') return;
+    const round = state.pack.rounds[state.roundIndex];
+    const nextIndex = state.questionIndex + 1;
+    if (round && nextIndex < round.questions.length) {
+      this.openAnswer(nextIndex);
+    } else {
+      this.endRound();
+    }
   }
 
   private advancePhaseAfterTimer(state: GameState): boolean {
@@ -445,6 +491,10 @@ export class GameController extends EventEmitter {
     }
     if (state.phase === 'round-handin') {
       this.showRoundAnswers();
+      return true;
+    }
+    if (state.phase === 'round-answers') {
+      this.advanceAnswer();
       return true;
     }
     return false;

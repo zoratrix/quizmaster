@@ -7,7 +7,7 @@ function question(points: number): Question {
     id: 'q1',
     text: 'Вопрос',
     answer: 'Ответ',
-    answerImage: null,
+    answerMedia: { image: null, audio: null, video: null },
     explanation: '',
     timeLimitSec: 60,
     points,

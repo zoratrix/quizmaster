@@ -38,7 +38,7 @@ function MediaFallback({ label }: { label: string }) {
   );
 }
 
-function ImageStage({ asset }: { asset: MediaAsset }) {
+function ImageStage({ asset, alt = 'Иллюстрация к вопросу' }: { asset: MediaAsset; alt?: string }) {
   const [failed, setFailed] = useState(false);
 
   if (failed) return <MediaFallback label="Изображение недоступно" />;
@@ -48,7 +48,7 @@ function ImageStage({ asset }: { asset: MediaAsset }) {
       <img
         className="game-media__image"
         src={mediaUrl(asset.id)}
-        alt="Иллюстрация к вопросу"
+        alt={alt}
         draggable={false}
         onError={() => setFailed(true)}
       />
@@ -209,7 +209,7 @@ function AudioPlayer({ asset, paused }: { asset: MediaAsset; paused: boolean }) 
         {WAVE_DELAYS.map((delay, index) => (
           <span className="game-audio__bar" key={index} style={{ animationDelay: `${delay}ms` }} />
         ))}
-        <span className="game-audio__note">{playing ? 'Воспроизведение' : 'Аудиовопрос'}</span>
+        <span className="game-audio__note">{playing ? 'Воспроизведение' : 'Аудио'}</span>
       </div>
 
       <div className="game-audio__controls">
@@ -256,6 +256,8 @@ function AudioPlayer({ asset, paused }: { asset: MediaAsset; paused: boolean }) 
 export interface MediaStageProps {
   media: QuestionMedia;
   paused: boolean;
+  /** Alt-текст картинки (для ответа — сам ответ). */
+  alt?: string;
 }
 
 /**
@@ -263,7 +265,7 @@ export interface MediaStageProps {
  * При смене вопроса компонент пересоздаётся (key по question.id), поэтому
  * воспроизведение начинается заново.
  */
-export function MediaStage({ media, paused }: MediaStageProps) {
+export function MediaStage({ media, paused, alt }: MediaStageProps) {
   const hasVisual = Boolean(media.video || media.image);
   const hasAudio = Boolean(media.audio);
   if (!hasVisual && !hasAudio) return null;
@@ -271,7 +273,7 @@ export function MediaStage({ media, paused }: MediaStageProps) {
   return (
     <div className={cx('game-media', !hasVisual && 'game-media--audio-only')}>
       {media.video ? <VideoStage key={media.video.id} asset={media.video} paused={paused} /> : null}
-      {!media.video && media.image ? <ImageStage key={media.image.id} asset={media.image} /> : null}
+      {!media.video && media.image ? <ImageStage key={media.image.id} asset={media.image} alt={alt} /> : null}
       {media.audio ? <AudioPlayer key={media.audio.id} asset={media.audio} paused={paused} /> : null}
     </div>
   );

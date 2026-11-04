@@ -8,7 +8,7 @@ function makeQuestion(id: string, points: number): Question {
     id,
     text: `Вопрос ${id}`,
     answer: 'ответ',
-    answerImage: null,
+    answerMedia: { image: null, audio: null, video: null },
     explanation: '',
     timeLimitSec: 60,
     points,
@@ -25,7 +25,7 @@ function makePack(rounds: Array<{ title: string; questions: Question[] }>): Quiz
     description: '',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    settings: { defaultTimeLimitSec: 60, defaultPoints: 1, partialCreditRatio: 0.5 },
+    settings: { defaultTimeLimitSec: 60, defaultPoints: 1, partialCreditRatio: 0.5, answerRevealSec: 15 },
     music: [],
     rounds: rounds.map((round, index): Round => ({
       id: `r${index}`,

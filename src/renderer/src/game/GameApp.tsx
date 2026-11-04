@@ -103,7 +103,7 @@ export function GameApp() {
         break;
 
       case 'round-answers':
-        content = <RoundAnswersView key={`answers-${state.roundIndex}`} state={state} />;
+        content = <RoundAnswersView key={`answers-${state.roundIndex}`} state={state} remainingMs={remainingMs} />;
         break;
 
       case 'round-summary':

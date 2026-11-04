@@ -13,7 +13,7 @@ const MUSIC_PHASES: ReadonlySet<GameState['phase']> = new Set<GameState['phase']
   'finished'
 ]);
 
-const DEFAULT_STATE: BackgroundMusicState = { volume: 0.35, muted: false, paused: false };
+const DEFAULT_STATE: BackgroundMusicState = { volume: 0.25, muted: false, paused: false };
 
 /**
  * Фоновая музыка пака и фанфары в конце игры.

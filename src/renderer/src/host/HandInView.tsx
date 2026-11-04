@@ -60,7 +60,7 @@ export function HandInView({ state, screen }: HandInViewProps) {
           <h2 className="host-handin__headline">Соберите бланки с ответами</h2>
           <p className="host-handin__text muted">
             Участники сдают листы с ответами. На игровом экране идёт таймер на 40 секунд — после его
-            окончания автоматически появятся правильные ответы на все вопросы раунда.
+            окончания правильные ответы начнут показываться по одному.
           </p>
           <div className="host-handin__actions">
             <Button variant="primary" size="lg" onClick={() => void run(() => window.qm.game.next())}>

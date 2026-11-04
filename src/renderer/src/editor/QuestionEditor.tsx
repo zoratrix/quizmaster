@@ -45,7 +45,14 @@ export function QuestionEditor({
     );
   }
 
-  const hasMedia = Boolean(question.media.image || question.media.audio || question.media.video);
+  const hasMedia = Boolean(
+    question.media.image ||
+      question.media.audio ||
+      question.media.video ||
+      question.answerMedia.image ||
+      question.answerMedia.audio ||
+      question.answerMedia.video
+  );
   const timeLimit = question.timeLimitSec;
 
   return (
@@ -143,14 +150,35 @@ export function QuestionEditor({
                 onChange={(event) => onUpdate((draft) => (draft.answer = event.target.value))}
               />
             </Field>
-            <MediaField
-              kind="image"
-              asset={question.answerImage}
-              onChange={(asset) => onUpdate((draft) => (draft.answerImage = asset))}
-              title="Картинка к ответу (необязательно)"
-              hint="Постер или кадр — показывается вместе с ответом на игровом экране"
-              addLabel="Добавить картинку к ответу"
-            />
+            <div className="question-editor__media">
+              <MediaField
+                compact
+                kind="image"
+                asset={question.answerMedia.image}
+                onChange={(asset) => onUpdate((draft) => (draft.answerMedia.image = asset))}
+                title="Картинка"
+                hint="К ответу: постер или кадр"
+                addLabel="Добавить картинку к ответу"
+              />
+              <MediaField
+                compact
+                kind="audio"
+                asset={question.answerMedia.audio}
+                onChange={(asset) => onUpdate((draft) => (draft.answerMedia.audio = asset))}
+                title="Музыка"
+                hint="К ответу: звучит при показе"
+                addLabel="Добавить музыку к ответу"
+              />
+              <MediaField
+                compact
+                kind="video"
+                asset={question.answerMedia.video}
+                onChange={(asset) => onUpdate((draft) => (draft.answerMedia.video = asset))}
+                title="Видео"
+                hint="К ответу: показывается при ответе"
+                addLabel="Добавить видео к ответу"
+              />
+            </div>
           </div>
         </section>
 
@@ -168,16 +196,19 @@ export function QuestionEditor({
 
         <section className="question-editor__media">
           <MediaField
+            compact
             kind="image"
             asset={question.media.image}
             onChange={(asset) => onUpdate((draft) => (draft.media.image = asset))}
           />
           <MediaField
+            compact
             kind="audio"
             asset={question.media.audio}
             onChange={(asset) => onUpdate((draft) => (draft.media.audio = asset))}
           />
           <MediaField
+            compact
             kind="video"
             asset={question.media.video}
             onChange={(asset) => onUpdate((draft) => (draft.media.video = asset))}

@@ -202,7 +202,9 @@ export function QuestionsPanel({
               question.media.image,
               question.media.audio,
               question.media.video,
-              question.answerImage
+              question.answerMedia.image,
+              question.answerMedia.audio,
+              question.answerMedia.video
             ].filter(Boolean).length;
             const empty = !question.text.trim();
             return (

@@ -602,6 +602,7 @@ export function EditorApp() {
             draft.music = values.music;
             draft.settings.defaultTimeLimitSec = values.defaultTimeLimitSec;
             draft.settings.defaultPoints = values.defaultPoints;
+            draft.settings.answerRevealSec = values.answerRevealSec;
           });
           setSettingsOpen(false);
         }}
@@ -701,6 +702,7 @@ interface PackSettingsModalProps {
     theme: ThemeId;
     defaultTimeLimitSec: number;
     defaultPoints: number;
+    answerRevealSec: number;
     music: MediaAsset[];
   }) => void;
 }
@@ -711,6 +713,7 @@ function PackSettingsModal({ open, pack, onClose, onApply }: PackSettingsModalPr
   const [description, setDescription] = useState(pack.description);
   const [time, setTime] = useState(String(pack.settings.defaultTimeLimitSec));
   const [points, setPoints] = useState(String(pack.settings.defaultPoints));
+  const [answerReveal, setAnswerReveal] = useState(String(pack.settings.answerRevealSec));
   const [theme, setTheme] = useState<ThemeId>(pack.theme);
   const [music, setMusic] = useState<MediaAsset[]>(pack.music);
   const [musicBusy, setMusicBusy] = useState(false);
@@ -721,6 +724,7 @@ function PackSettingsModal({ open, pack, onClose, onApply }: PackSettingsModalPr
     setDescription(pack.description);
     setTime(String(pack.settings.defaultTimeLimitSec));
     setPoints(String(pack.settings.defaultPoints));
+    setAnswerReveal(String(pack.settings.answerRevealSec));
     setTheme(pack.theme);
     setMusic(pack.music);
     setMusicBusy(false);
@@ -778,6 +782,7 @@ function PackSettingsModal({ open, pack, onClose, onApply }: PackSettingsModalPr
                 theme,
                 defaultTimeLimitSec: clamp(Number(time), 5, 3600, 60),
                 defaultPoints: clamp(Number(points), 0, 1000, 1),
+                answerRevealSec: clamp(Number(answerReveal), 3, 300, 15),
                 music
               })
             }
@@ -819,6 +824,17 @@ function PackSettingsModal({ open, pack, onClose, onApply }: PackSettingsModalPr
               step={0.5}
               value={points}
               onChange={(event) => setPoints(event.target.value)}
+            />
+          </Field>
+          <Field label="Показ ответа, сек" hint="По одному ответу в конце раунда" className="grow">
+            <input
+              className="input"
+              type="number"
+              min={3}
+              max={300}
+              step={1}
+              value={answerReveal}
+              onChange={(event) => setAnswerReveal(event.target.value)}
             />
           </Field>
         </div>

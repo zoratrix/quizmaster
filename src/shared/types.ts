@@ -6,6 +6,8 @@ export const PACK_EXTENSION = '.quizpack';
 export const DEFAULT_TIME_LIMIT_SEC = 60;
 export const DEFAULT_POINTS = 1;
 export const PARTIAL_CREDIT_RATIO = 0.5;
+/** Сколько секунд показывается каждый правильный ответ в конце раунда */
+export const DEFAULT_ANSWER_REVEAL_SEC = 15;
 /** Сколько секунд повторно показывается каждый вопрос перед сдачей бланков */
 export const REVIEW_PER_QUESTION_SEC = 15;
 /** Сколько секунд даётся на сдачу бланков после просмотра вопросов */
@@ -53,8 +55,8 @@ export interface Question {
   text: string;
   /** Правильный ответ для ведущего */
   answer: string;
-  /** Картинка-иллюстрация к ответу (постер, кадр); показывается вместе с ответом */
-  answerImage: MediaAsset | null;
+  /** Медиа-иллюстрация к ответу (картинка/аудио/видео); показывается вместе с ответом */
+  answerMedia: QuestionMedia;
   /** Необязательное пояснение, показывается после раскрытия ответа */
   explanation: string;
   timeLimitSec: number;
@@ -75,6 +77,8 @@ export interface PackSettings {
   defaultPoints: number;
   /** Доля баллов за частичный ответ (0.5 = 50%) */
   partialCreditRatio: number;
+  /** Сколько секунд показывается каждый правильный ответ в конце раунда */
+  answerRevealSec: number;
 }
 
 export interface QuizPack {

@@ -2007,6 +2007,105 @@
   background: var(--bg-soft);
 }
 
+/* ---------- Пошаговый показ ответов ---------- */
+
+.host-answer-single {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+
+.host-answer-single__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.host-answer-single__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.host-answer-single__question {
+  max-width: min(860px, 92%);
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.host-answer-single__answer {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 92%;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  background: var(--ok-soft);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #c8ffe9;
+  font-size: clamp(20px, 2.2vw, 30px);
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.host-answer-single__label {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 11px;
+  font-weight: 650;
+  color: rgba(200, 255, 233, 0.65);
+}
+
+.host-answer-single__explanation {
+  max-width: min(760px, 92%);
+  line-height: 1.5;
+}
+
+.host-answer-single__image {
+  display: block;
+  max-width: min(560px, 100%);
+  max-height: 46vh;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-soft);
+}
+
+.host-answer-single__media {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(720px, 100%);
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.host-answer-single__empty {
+  padding: 40px 20px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
 .host-answers__side {
   display: flex;
   flex-direction: column;
